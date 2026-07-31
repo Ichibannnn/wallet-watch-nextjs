@@ -18,3 +18,15 @@
 <!-- Authentication Function -->
 
 -npm install next-auth @auth/prisma-adapter
+
+<!-- Setting up Prisma -->
+
+-npx prisma init
+-npm install dotenv
+-npm install @prisma/adapter-pg
+-npx prisma generate
+-npm install prisma@latest @prisma/client@latest
+-npx prisma db push
+-npm install bcryptjs
+-npm install -D @types/bcryptjs
+-npm install react-hook-form zod @hookform/resolvers

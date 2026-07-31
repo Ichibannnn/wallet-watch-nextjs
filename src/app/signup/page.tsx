@@ -5,7 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export default function Home() {
+export const metadata = {
+  title: "Sign up · Wallet Watch",
+  description: "Create your Wallet Watch account.",
+};
+
+export default function SignUpPage() {
   return (
     <main className="grid min-h-screen grid-cols-1 lg:grid-cols-2">
       <AuthBrandPanel />
@@ -19,37 +24,44 @@ export default function Home() {
 
         <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center">
           <header className="mb-6">
-            <h1 className="text-2xl font-bold tracking-tight">Welcome back</h1>
+            <h1 className="text-2xl font-bold tracking-tight">
+              Create your account
+            </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Sign in to your Wallet Watch account
+              Start tracking your money with Wallet Watch
             </p>
           </header>
 
           <form className="flex flex-col gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="name">Full name</Label>
+              <Input id="name" name="name" type="text" placeholder="Juan dela Cruz" autoComplete="name" required />
+            </div>
+
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
               <Input id="email" name="email" type="email" placeholder="you@email.com" autoComplete="email" required />
             </div>
 
             <div className="grid gap-2">
-              <div className="flex items-center">
-                <Label htmlFor="password">Password</Label>
-                <a href="#" className="ml-auto text-sm text-muted-foreground underline-offset-4 hover:underline">
-                  Forgot your password?
-                </a>
-              </div>
-              <Input id="password" name="password" type="password" placeholder="••••••••" autoComplete="current-password" required />
+              <Label htmlFor="password">Password</Label>
+              <Input id="password" name="password" type="password" placeholder="••••••••" autoComplete="new-password" required />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="confirmPassword">Confirm password</Label>
+              <Input id="confirmPassword" name="confirmPassword" type="password" placeholder="••••••••" autoComplete="new-password" required />
             </div>
 
             <Button type="submit" size="lg" className="mt-2 w-full">
-              Sign in
+              Create account
             </Button>
           </form>
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
-            Don&apos;t have an account?{" "}
-            <Link href="/signup" className="font-medium text-primary underline-offset-4 hover:underline">
-              Sign up
+            Already have an account?{" "}
+            <Link href="/" className="font-medium text-primary underline-offset-4 hover:underline">
+              Sign in
             </Link>
           </p>
         </div>
