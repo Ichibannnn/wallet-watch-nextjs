@@ -6,7 +6,6 @@ import { ThemeToggle } from "@/components/theme-toggle";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PasswordInput } from "@/components/ui/password-input";
 import { useState } from "react";
 import { SignUpInput, signUpSchema } from "@/lib/validations/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -34,33 +33,21 @@ export default function SignUpPage() {
     },
   });
 
-  const password = form.watch("password");
-  const confirmPassword = form.watch("confirmPassword");
-  const passwordsMatch = password === confirmPassword;
-
   async function onSubmit(data: SignUpInput) {
-    setIsLoading(true);
-    setServerError(null);
+    console.log("FormData: ", data);
 
-    try {
-      const response = await fetch("/api/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
+    // setIsLoading(true);
+    // setServerError(null);
 
-      if (!response.ok) {
-        const { error } = await response.json();
-        setServerError(error ?? "Failed to create account. Please try again.");
-        return;
-      }
-
-      router.push("/signin?registered=1");
-    } catch {
-      setServerError("Failed to create account. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
+    // try {
+    //   // Simulate API call
+    //   await new Promise((resolve) => setTimeout(resolve, 1000));
+    //   router.push("/dashboard");
+    // } catch (error) {
+    //   setServerError("Failed to create account. Please try again.");
+    // } finally {
+    //   setIsLoading(false);
+    // }
   }
 
   return (
@@ -143,8 +130,9 @@ export default function SignUpPage() {
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldLabel>Password</FieldLabel>
-                      <PasswordInput
+                      <Input
                         {...field}
+                        type="password"
                         placeholder="••••••••"
                         autoComplete="new-password"
                       />
@@ -163,27 +151,16 @@ export default function SignUpPage() {
                   name="confirmPassword"
                   control={form.control}
                   render={({ field, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid && !passwordsMatch}>
+                    <Field data-invalid={fieldState.invalid}>
                       <FieldLabel>Confirm password</FieldLabel>
-                      <PasswordInput
+                      <Input
                         {...field}
+                        type=""
                         placeholder="••••••••"
                         autoComplete="new-password"
                       />
-                      {confirmPassword.length > 0 ? (
-                        passwordsMatch ? (
-                          <p className="text-sm font-normal text-emerald-600 dark:text-emerald-400">
-                            Passwords match
-                          </p>
-                        ) : (
-                          <p className="text-sm font-normal text-destructive">
-                            Passwords do not match
-                          </p>
-                        )
-                      ) : (
-                        fieldState.invalid && (
-                          <FieldError errors={[fieldState.error]} />
-                        )
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
                       )}
                     </Field>
                   )}
@@ -191,22 +168,8 @@ export default function SignUpPage() {
               </FieldGroup>
             </div>
 
-            {serverError && (
-              <p
-                role="alert"
-                className="text-sm font-normal text-destructive"
-              >
-                {serverError}
-              </p>
-            )}
-
-            <Button
-              type="submit"
-              size="lg"
-              className="mt-2 w-full"
-              disabled={isLoading}
-            >
-              {isLoading ? "Creating account..." : "Create account"}
+            <Button type="submit" size="lg" className="mt-2 w-full">
+              Create account
             </Button>
           </form>
 
@@ -214,7 +177,7 @@ export default function SignUpPage() {
           <p className="mt-6 text-center text-sm text-muted-foreground">
             Already have an account?{" "}
             <Link
-              href="/signin"
+              href="/"
               className="font-medium text-primary underline-offset-4 hover:underline"
             >
               Sign in
