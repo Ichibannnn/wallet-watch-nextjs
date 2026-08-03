@@ -6,13 +6,18 @@ import { ThemeToggle } from "@/components/theme-toggle";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/ui/password-input";
 import { useState } from "react";
 import { SignUpInput, signUpSchema } from "@/lib/validations/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
-import { FieldGroup } from "@/components/ui/field";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -29,21 +34,33 @@ export default function SignUpPage() {
     },
   });
 
+  const password = form.watch("password");
+  const confirmPassword = form.watch("confirmPassword");
+  const passwordsMatch = password === confirmPassword;
+
   async function onSubmit(data: SignUpInput) {
-    console.log("FormData: ", data);
+    setIsLoading(true);
+    setServerError(null);
 
-    // setIsLoading(true);
-    // setServerError(null);
+    try {
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
 
-    // try {
-    //   // Simulate API call
-    //   await new Promise((resolve) => setTimeout(resolve, 1000));
-    //   router.push("/dashboard");
-    // } catch (error) {
-    //   setServerError("Failed to create account. Please try again.");
-    // } finally {
-    //   setIsLoading(false);
-    // }
+      if (!response.ok) {
+        const { error } = await response.json();
+        setServerError(error ?? "Failed to create account. Please try again.");
+        return;
+      }
+
+      router.push("/signin?registered=1");
+    } catch {
+      setServerError("Failed to create account. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -60,77 +77,146 @@ export default function SignUpPage() {
         <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center">
           {/* Form Header */}
           <header className="mb-6">
-            <h1 className="text-2xl font-bold tracking-tight">Create your account</h1>
-            <p className="mt-1 text-sm text-muted-foreground">Start tracking your money with Wallet Watch</p>
+            <h1 className="text-2xl font-bold tracking-tight">
+              Create your account
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Start tracking your money with Wallet Watch
+            </p>
           </header>
 
           {/* Form Content */}
 
-          <form className="flex flex-col gap-4" onSubmit={form.handleSubmit(onSubmit)}>
+          <form
+            className="flex flex-col gap-4"
+            onSubmit={form.handleSubmit(onSubmit)}
+          >
             <div className="grid gap-2">
-              <Label htmlFor="email">Name</Label>
               <FieldGroup>
                 <Controller
                   name="name"
                   control={form.control}
-                  render={({ field }) => (
-                    <Input
-                      {...field}
-                      id="name"
-                      type="text"
-                      placeholder="Juan Dela Cruz"
-                      autoComplete="name"
-                    />
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel>Fullname</FieldLabel>
+                      <Input
+                        {...field}
+                        placeholder="Juan Dela Cruz"
+                        autoComplete="off"
+                      />
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
                   )}
                 />
               </FieldGroup>
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="you@email.com"
-                autoComplete="email"
-                required
-              />
+              <FieldGroup>
+                <Controller
+                  name="email"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel>Email</FieldLabel>
+                      <Input
+                        {...field}
+                        placeholder="you@email.com"
+                        autoComplete="off"
+                      />
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
+                />
+              </FieldGroup>
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                placeholder="••••••••"
-                autoComplete="new-password"
-                required
-              />
+              <FieldGroup>
+                <Controller
+                  name="password"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel>Password</FieldLabel>
+                      <PasswordInput
+                        {...field}
+                        placeholder="••••••••"
+                        autoComplete="new-password"
+                      />
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
+                />
+              </FieldGroup>
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="confirmPassword">Confirm password</Label>
-              <Input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                placeholder="••••••••"
-                autoComplete="new-password"
-                required
-              />
+              <FieldGroup>
+                <Controller
+                  name="confirmPassword"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid && !passwordsMatch}>
+                      <FieldLabel>Confirm password</FieldLabel>
+                      <PasswordInput
+                        {...field}
+                        placeholder="••••••••"
+                        autoComplete="new-password"
+                      />
+                      {confirmPassword.length > 0 ? (
+                        passwordsMatch ? (
+                          <p className="text-sm font-normal text-emerald-600 dark:text-emerald-400">
+                            Passwords match
+                          </p>
+                        ) : (
+                          <p className="text-sm font-normal text-destructive">
+                            Passwords do not match
+                          </p>
+                        )
+                      ) : (
+                        fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )
+                      )}
+                    </Field>
+                  )}
+                />
+              </FieldGroup>
             </div>
 
-            <Button type="submit" size="lg" className="mt-2 w-full">
-              Create account
+            {serverError && (
+              <p
+                role="alert"
+                className="text-sm font-normal text-destructive"
+              >
+                {serverError}
+              </p>
+            )}
+
+            <Button
+              type="submit"
+              size="lg"
+              className="mt-2 w-full"
+              disabled={isLoading}
+            >
+              {isLoading ? "Creating account..." : "Create account"}
             </Button>
           </form>
 
           {/* Form Footer */}
           <p className="mt-6 text-center text-sm text-muted-foreground">
             Already have an account?{" "}
-            <Link href="/" className="font-medium text-primary underline-offset-4 hover:underline">
+            <Link
+              href="/signin"
+              className="font-medium text-primary underline-offset-4 hover:underline"
+            >
               Sign in
             </Link>
           </p>
