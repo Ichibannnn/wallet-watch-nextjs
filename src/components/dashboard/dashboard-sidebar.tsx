@@ -15,15 +15,7 @@ function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-function NavLink({
-  item,
-  pathname,
-  nested = false,
-}: {
-  item: NavChild;
-  pathname: string;
-  nested?: boolean;
-}) {
+function NavLink({ item, pathname, nested = false }: { item: NavChild; pathname: string; nested?: boolean }) {
   const active = isActive(pathname, item.href);
   const Icon = item.icon;
 
@@ -36,7 +28,7 @@ function NavLink({
         nested && "ml-4 gap-2.5 py-1.5 text-[0.8rem]",
         active
           ? "bg-sidebar-accent text-sidebar-accent-foreground"
-          : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+          : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground",
       )}
     >
       <Icon className={cn("size-[1.1rem] shrink-0", nested && "size-4")} />
@@ -49,9 +41,7 @@ export function DashboardSidebar({ role = "admin" }: { role?: Role }) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
 
-  const items = navItems.filter(
-    (item) => !item.roles || item.roles.includes(role)
-  );
+  const items = navItems.filter((item) => !item.roles || item.roles.includes(role));
 
   return (
     <aside className="flex h-full w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar">
@@ -61,9 +51,7 @@ export function DashboardSidebar({ role = "admin" }: { role?: Role }) {
           <Wallet className="size-5" />
         </span>
         <div className="leading-tight">
-          <p className="text-sm font-bold text-sidebar-foreground">
-            Wallet Watch
-          </p>
+          <p className="text-sm font-bold text-sidebar-foreground">Wallet Watch</p>
           <p className="text-[0.65rem] font-medium tracking-wide text-sidebar-foreground/60 uppercase">
             Personal Finance
           </p>
@@ -78,12 +66,7 @@ export function DashboardSidebar({ role = "admin" }: { role?: Role }) {
             {item.children && isActive(pathname, item.href) && (
               <div className="space-y-1">
                 {item.children.map((child) => (
-                  <NavLink
-                    key={child.href}
-                    item={child}
-                    pathname={pathname}
-                    nested
-                  />
+                  <NavLink key={child.href} item={child} pathname={pathname} nested />
                 ))}
               </div>
             )}
@@ -97,14 +80,12 @@ export function DashboardSidebar({ role = "admin" }: { role?: Role }) {
           <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
             {getInitials(user.name)}
           </span>
+
           <div className="min-w-0 flex-1 leading-tight">
-            <p className="truncate text-sm font-semibold text-sidebar-foreground">
-              {user.name}
-            </p>
-            <p className="truncate text-xs text-sidebar-foreground/60">
-              {user.email}
-            </p>
+            <p className="truncate text-sm font-semibold text-sidebar-foreground">{user.name}</p>
+            <p className="truncate text-xs text-sidebar-foreground/60">{user.email}</p>
           </div>
+
           <button
             type="button"
             onClick={logout}

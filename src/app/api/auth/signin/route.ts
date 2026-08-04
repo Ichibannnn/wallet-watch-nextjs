@@ -14,7 +14,6 @@ export async function POST(request: Request) {
     }
 
     const { email, password } = result.data;
-
     const user = await prisma.user.findUnique({ where: { email } });
 
     // Use the same message for "no user" and "wrong password" so the endpoint
@@ -32,7 +31,7 @@ export async function POST(request: Request) {
           createdAt: user.createdAt,
         },
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("Sign in error:", error);

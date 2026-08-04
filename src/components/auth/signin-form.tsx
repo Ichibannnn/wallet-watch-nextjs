@@ -12,12 +12,7 @@ import { storeUser } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 
 export function SignInForm() {
   const router = useRouter();
@@ -63,11 +58,7 @@ export function SignInForm() {
   }
 
   return (
-    <form
-      className="flex flex-col gap-4"
-      onSubmit={form.handleSubmit(onSubmit)}
-      noValidate
-    >
+    <form className="flex flex-col gap-4" onSubmit={form.handleSubmit(onSubmit)} noValidate>
       <FieldGroup>
         <Controller
           name="email"
@@ -75,15 +66,8 @@ export function SignInForm() {
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <FieldLabel>Email</FieldLabel>
-              <Input
-                {...field}
-                type="email"
-                placeholder="you@email.com"
-                autoComplete="email"
-              />
-              {fieldState.invalid && (
-                <FieldError errors={[fieldState.error]} />
-              )}
+              <Input {...field} type="email" placeholder="Enter email..." autoComplete="off" />
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             </Field>
           )}
         />
@@ -104,14 +88,8 @@ export function SignInForm() {
                   Forgot your password?
                 </Link>
               </div>
-              <PasswordInput
-                {...field}
-                placeholder="••••••••"
-                autoComplete="current-password"
-              />
-              {fieldState.invalid && (
-                <FieldError errors={[fieldState.error]} />
-              )}
+              <PasswordInput {...field} placeholder="Enter password..." autoComplete="off" />
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             </Field>
           )}
         />
@@ -123,12 +101,7 @@ export function SignInForm() {
         </p>
       )}
 
-      <Button
-        type="submit"
-        size="lg"
-        className="mt-2 w-full"
-        disabled={isLoading}
-      >
+      <Button type="submit" size="lg" className="mt-2 w-full" disabled={isLoading}>
         {isLoading ? "Signing in..." : "Sign in"}
       </Button>
     </form>
