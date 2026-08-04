@@ -9,8 +9,6 @@ import { getInitials } from "@/lib/auth";
 import { useAuth } from "@/components/auth/auth-provider";
 import { cn } from "@/lib/utils";
 
-type Role = "admin" | "user";
-
 function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
@@ -37,11 +35,12 @@ function NavLink({ item, pathname, nested = false }: { item: NavChild; pathname:
   );
 }
 
-export function DashboardSidebar({ role = "admin" }: { role?: Role }) {
+export function DashboardSidebar() {
   const pathname = usePathname();
-  const { user, logout } = useAuth();
+  const { user, logout, can } = useAuth();
 
-  const items = navItems.filter((item) => !item.roles || item.roles.includes(role));
+  // Show a nav item only when the user can read its module.
+  const items = navItems.filter((item) => !item.module || can(item.module, "read"));
 
   return (
     <aside className="flex h-full w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar">

@@ -8,7 +8,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 
 import { signInSchema, type SignInInput } from "@/lib/validations/auth";
-import { storeUser } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
@@ -44,8 +43,8 @@ export function SignInForm() {
         return;
       }
 
-      // Authenticated: persist the user for protected routes, then continue.
-      storeUser(payload.user);
+      // Authenticated: the API set an httpOnly session cookie, so we just
+      // navigate — AuthProvider hydrates the user + permissions from /api/me.
       toast.success(`Welcome back, ${payload.user.name}!`);
       router.push("/transactions");
     } catch {

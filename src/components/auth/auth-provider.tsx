@@ -7,58 +7,111 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
-import { clearUser, getStoredUser, type AuthUser } from "@/lib/auth";
+import type { AuthRole, AuthUser } from "@/lib/auth";
+import { navItems } from "@/lib/dashboard-nav";
+import { hasPermission, type ModulePermission } from "@/lib/rbac/permissions";
+import type { Action, ModuleKey } from "@/lib/rbac/modules";
+
+/** The RBAC module that owns a given dashboard pathname, if any. */
+function moduleForPath(pathname: string): ModuleKey | undefined {
+  for (const item of navItems) {
+    if (item.href !== "/" && (pathname === item.href || pathname.startsWith(`${item.href}/`))) {
+      return item.module;
+    }
+  }
+  return undefined;
+}
 
 type AuthContextValue = {
   user: AuthUser;
+  role: AuthRole;
+  permissions: ModulePermission[];
+  /** True if the signed-in user may perform `action` on `module`. */
+  can: (module: ModuleKey, action: Action) => boolean;
   logout: () => void;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 /**
- * Client-side route guard. Reads the signed-in user from localStorage and
- * redirects to /signin when there is none, so protected content never renders
- * for a signed-out visitor.
+ * Client-side session gate. Hydrates the signed-in user, role and permission
+ * matrix from GET /api/me (the server verifies the httpOnly cookie), and
+ * redirects to /signin when there is no valid session.
  *
- * NOTE: this is UX-level gating only. localStorage is readable by any script on
- * the page and is never checked on the server, so the underlying routes are not
- * truly protected. Real protection needs an httpOnly session cookie verified in
- * the server (e.g. Next's proxy.ts).
+ * This drives UX (which nav/pages/actions to show). It is not the security
+ * boundary — every mutation is re-checked server-side in the Route Handlers
+ * via lib/rbac/guard.ts.
  */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const pathname = usePathname();
+  const [session, setSession] = useState<{
+    user: AuthUser;
+    role: AuthRole;
+    permissions: ModulePermission[];
+  } | null>(null);
   const [checked, setChecked] = useState(false);
 
   useEffect(() => {
-    const stored = getStoredUser();
-    if (!stored) {
-      router.replace("/signin");
-      return;
+    let active = true;
+
+    async function load() {
+      try {
+        const res = await fetch("/api/me", { cache: "no-store" });
+        if (!res.ok) {
+          router.replace("/signin");
+          return;
+        }
+        const data = await res.json();
+        if (!active) return;
+        setSession({ user: data.user, role: data.role, permissions: data.permissions });
+        setChecked(true);
+      } catch {
+        router.replace("/signin");
+      }
     }
-    setUser(stored);
-    setChecked(true);
+
+    load();
+    return () => {
+      active = false;
+    };
   }, [router]);
 
-  function logout() {
-    clearUser();
+  // Route-level guard: if the user opens a module page they can't read (e.g. by
+  // typing the URL), send them to the first module they can read, or /signin.
+  useEffect(() => {
+    if (!session) return;
+    const module = moduleForPath(pathname);
+    if (!module || hasPermission(session.permissions, module, "read")) return;
+
+    const fallback = navItems.find(
+      (item) => item.module && hasPermission(session.permissions, item.module, "read"),
+    );
+    router.replace(fallback ? fallback.href : "/signin");
+  }, [session, pathname, router]);
+
+  async function logout() {
+    await fetch("/api/auth/logout", { method: "POST" });
     router.replace("/signin");
   }
 
-  // Nothing to render until we've confirmed a user (prevents a flash of the
-  // protected dashboard before the redirect fires).
-  if (!checked || !user) {
+  // Nothing to render until we've confirmed a session (prevents a flash of the
+  // protected dashboard before any redirect fires).
+  if (!checked || !session) {
     return null;
   }
 
-  return (
-    <AuthContext.Provider value={{ user, logout }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  const value: AuthContextValue = {
+    user: session.user,
+    role: session.role,
+    permissions: session.permissions,
+    can: (module, action) => hasPermission(session.permissions, module, action),
+    logout,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth(): AuthContextValue {

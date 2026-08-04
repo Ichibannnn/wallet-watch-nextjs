@@ -22,11 +22,16 @@ export async function POST(request: Request) {
 
     const hashedPassword = await hashPassword(password);
 
+    // Public self-registration always lands on the built-in "User" role, never
+    // an elevated one. Admins can promote accounts later from User Accounts.
+    const defaultRole = await prisma.role.findUnique({ where: { name: "User" } });
+
     const user = await prisma.user.create({
       data: {
         name,
         email,
         password: hashedPassword,
+        roleId: defaultRole?.id ?? null,
       },
       select: {
         id: true,

@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyPassword } from "@/lib/password";
+import { createSession } from "@/lib/session";
 import { signInSchema } from "@/lib/validations/auth";
 
 export async function POST(request: Request) {
@@ -14,7 +15,10 @@ export async function POST(request: Request) {
     }
 
     const { email, password } = result.data;
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({
+      where: { email },
+      include: { role: true },
+    });
 
     // Use the same message for "no user" and "wrong password" so the endpoint
     // doesn't reveal which emails are registered.
@@ -22,12 +26,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
     }
 
+    // A disabled account authenticates but is not allowed in.
+    if (!user.isActive) {
+      return NextResponse.json({ error: "This account has been disabled." }, { status: 403 });
+    }
+
+    // Establish the signed session cookie the rest of the app trusts.
+    await createSession(user.id);
+
     return NextResponse.json(
       {
         user: {
           id: user.id,
           name: user.name,
           email: user.email,
+          role: user.role ? { id: user.role.id, name: user.role.name } : null,
           createdAt: user.createdAt,
         },
       },

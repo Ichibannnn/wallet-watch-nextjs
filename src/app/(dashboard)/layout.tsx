@@ -10,7 +10,7 @@ export default function DashboardLayout({
   return (
     <AuthProvider>
       <div className="flex h-screen overflow-hidden bg-muted/40">
-        <DashboardSidebar role="admin" />
+        <DashboardSidebar />
 
         <div className="flex flex-1 flex-col overflow-hidden">
           <DashboardHeader />

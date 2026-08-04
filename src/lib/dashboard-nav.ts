@@ -9,12 +9,17 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+import type { ModuleKey } from "@/lib/rbac/modules";
+
 export type NavChild = {
   label: string;
   href: string;
   icon: LucideIcon;
-  /** Roles allowed to see this item (RBAC). Omit = everyone. */
-  roles?: Array<"admin" | "user">;
+  /**
+   * RBAC module this item belongs to. The sidebar shows the item only when the
+   * signed-in user has `read` on this module. Omit = always visible.
+   */
+  module?: ModuleKey;
 };
 
 export type NavItem = NavChild & {
@@ -22,18 +27,18 @@ export type NavItem = NavChild & {
 };
 
 export const navItems: NavItem[] = [
-  { label: "Transactions", href: "/transactions", icon: ArrowLeftRight },
-  { label: "Statistics", href: "/statistics", icon: ChartColumnBig },
-  { label: "Accounts", href: "/accounts", icon: Wallet },
-  { label: "Categories", href: "/categories", icon: Tags },
+  { label: "Transactions", href: "/transactions", icon: ArrowLeftRight, module: "transactions" },
+  { label: "Statistics", href: "/statistics", icon: ChartColumnBig, module: "statistics" },
+  { label: "Accounts", href: "/accounts", icon: Wallet, module: "accounts" },
+  { label: "Categories", href: "/categories", icon: Tags, module: "categories" },
   {
     label: "User Management",
     href: "/user-management",
     icon: ShieldCheck,
-    roles: ["admin"],
+    module: "user-management",
     children: [
-      { label: "User Accounts", href: "/user-management/users", icon: Users },
-      { label: "User Roles", href: "/user-management/roles", icon: UserCog },
+      { label: "User Accounts", href: "/user-management/users", icon: Users, module: "user-management" },
+      { label: "User Roles", href: "/user-management/roles", icon: UserCog, module: "user-management" },
     ],
   },
 ];
