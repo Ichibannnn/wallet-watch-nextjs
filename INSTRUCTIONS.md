@@ -30,3 +30,7 @@
 -npm install bcryptjs
 -npm install -D @types/bcryptjs
 -npm install react-hook-form zod @hookform/resolvers
+
+<!-- Auth Secret -->
+
+-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
