@@ -26,6 +26,7 @@
 -npm install @prisma/adapter-pg
 -npx prisma generate
 -npm install prisma@latest @prisma/client@latest
+-npx prisma db seed
 -npx prisma db push
 -npm install bcryptjs
 -npm install -D @types/bcryptjs
