@@ -3,26 +3,18 @@ import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 
 import { PrismaClient } from "../src/generated/prisma/client";
-import { MODULES, type ModuleKey } from "../src/lib/rbac/modules";
+import { ALL_MODULE_KEYS } from "../src/lib/rbac/modules";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
-type Crud = { canCreate: boolean; canRead: boolean; canUpdate: boolean; canDelete: boolean };
-
-const FULL: Crud = { canCreate: true, canRead: true, canUpdate: true, canDelete: true };
-const READ_ONLY: Crud = { canCreate: false, canRead: true, canUpdate: false, canDelete: false };
-const NONE: Crud = { canCreate: false, canRead: false, canUpdate: false, canDelete: false };
-
-/** Admin: full CRUD on every module. User: read on everything except user-management. */
-function permissionsFor(role: "Admin" | "User"): Array<{ module: ModuleKey } & Crud> {
-  return MODULES.map(({ key }) => {
-    if (role === "Admin") return { module: key, ...FULL };
-    return { module: key, ...(key === "user-management" ? NONE : READ_ONLY) };
-  });
+/** Admin: every module + sub-module. User: finance modules only, no user management. */
+function modulesFor(role: "Admin" | "User"): string[] {
+  if (role === "Admin") return [...ALL_MODULE_KEYS];
+  return ["transactions", "statistics", "accounts", "categories"];
 }
 
-/** Create a system role and (re)sync its permission matrix. */
+/** Create a system role and (re)sync its tagged modules. */
 async function upsertSystemRole(name: "Admin" | "User", description: string) {
   const role = await prisma.role.upsert({
     where: { name },
@@ -30,20 +22,18 @@ async function upsertSystemRole(name: "Admin" | "User", description: string) {
     create: { name, description, isSystem: true },
   });
 
-  for (const perm of permissionsFor(name)) {
-    await prisma.permission.upsert({
-      where: { roleId_module: { roleId: role.id, module: perm.module } },
-      update: perm,
-      create: { roleId: role.id, ...perm },
-    });
-  }
+  // Replace the whole tag set so re-seeding stays idempotent.
+  await prisma.roleModule.deleteMany({ where: { roleId: role.id } });
+  await prisma.roleModule.createMany({
+    data: modulesFor(name).map((module) => ({ roleId: role.id, module })),
+  });
 
   return role;
 }
 
 async function main() {
-  const admin = await upsertSystemRole("Admin", "Full access to every module.");
-  await upsertSystemRole("User", "Read-only access to finance modules; no user management.");
+  const admin = await upsertSystemRole("Admin", "Access to every module.");
+  await upsertSystemRole("User", "Access to finance modules; no user management.");
 
   // Backfill: any existing user without a role becomes Admin so nobody is locked
   // out of the app the moment RBAC turns on. New self-signups get the User role.

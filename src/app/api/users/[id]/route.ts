@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/password";
-import { authErrorResponse, requirePermission } from "@/lib/rbac/guard";
+import { authErrorResponse, requireModule } from "@/lib/rbac/guard";
 import { updateUserSchema } from "@/lib/validations/user";
 
 type Context = { params: Promise<{ id: string }> };
@@ -19,7 +19,7 @@ const userSelect = {
 
 export async function GET(_request: Request, { params }: Context) {
   try {
-    await requirePermission("user-management", "read");
+    await requireModule("user-accounts");
     const { id } = await params;
 
     const user = await prisma.user.findUnique({ where: { id }, select: userSelect });
@@ -34,7 +34,7 @@ export async function GET(_request: Request, { params }: Context) {
 
 export async function PUT(request: Request, { params }: Context) {
   try {
-    const current = await requirePermission("user-management", "update");
+    const current = await requireModule("user-accounts");
     const { id } = await params;
 
     const target = await prisma.user.findUnique({ where: { id } });
@@ -84,7 +84,7 @@ export async function PUT(request: Request, { params }: Context) {
 
 export async function DELETE(_request: Request, { params }: Context) {
   try {
-    const current = await requirePermission("user-management", "delete");
+    const current = await requireModule("user-accounts");
     const { id } = await params;
 
     if (current.id === id) {

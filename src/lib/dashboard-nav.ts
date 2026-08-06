@@ -16,8 +16,8 @@ export type NavChild = {
   href: string;
   icon: LucideIcon;
   /**
-   * RBAC module this item belongs to. The sidebar shows the item only when the
-   * signed-in user has `read` on this module. Omit = always visible.
+   * RBAC module (or sub-module) this item belongs to. The sidebar shows the item
+   * only when the signed-in user's role is tagged with it. Omit = always visible.
    */
   module?: ModuleKey;
 };
@@ -37,8 +37,8 @@ export const navItems: NavItem[] = [
     icon: ShieldCheck,
     module: "user-management",
     children: [
-      { label: "User Accounts", href: "/user-management/users", icon: Users, module: "user-management" },
-      { label: "User Roles", href: "/user-management/roles", icon: UserCog, module: "user-management" },
+      { label: "User Accounts", href: "/user-management/users", icon: Users, module: "user-accounts" },
+      { label: "User Roles", href: "/user-management/roles", icon: UserCog, module: "user-roles" },
     ],
   },
 ];

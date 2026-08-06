@@ -14,13 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  PermissionMatrix,
-  emptyMatrix,
-  matrixFromPermissions,
-  matrixToPermissions,
-  type PermissionState,
-} from "@/components/user-management/permission-matrix";
+import { ModuleTagPicker } from "@/components/user-management/module-tag-picker";
 import type { RoleRecord } from "@/lib/user-management/types";
 
 export function RoleDialog({
@@ -38,7 +32,7 @@ export function RoleDialog({
   const isEdit = role !== null;
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [matrix, setMatrix] = useState<PermissionState>(emptyMatrix());
+  const [modules, setModules] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
   // Reset the form whenever the dialog opens for a different role.
@@ -46,7 +40,7 @@ export function RoleDialog({
     if (!open) return;
     setName(role?.name ?? "");
     setDescription(role?.description ?? "");
-    setMatrix(role ? matrixFromPermissions(role.permissions) : emptyMatrix());
+    setModules(role?.modules ?? []);
   }, [open, role]);
 
   async function handleSave() {
@@ -55,11 +49,7 @@ export function RoleDialog({
       const res = await fetch(isEdit ? `/api/roles/${role.id}` : "/api/roles", {
         method: isEdit ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name,
-          description,
-          permissions: matrixToPermissions(matrix),
-        }),
+        body: JSON.stringify({ name, description, modules }),
       });
       const payload = await res.json();
       if (!res.ok) {
@@ -83,8 +73,8 @@ export function RoleDialog({
           <DialogTitle>{isEdit ? "Edit role" : "Create role"}</DialogTitle>
           <DialogDescription>
             {isEdit
-              ? "Update this role's details and module permissions."
-              : "Name the role and choose what each module allows."}
+              ? "Update this role's details and tag the modules it can access."
+              : "Name the role and tag the modules it can access."}
           </DialogDescription>
         </DialogHeader>
 
@@ -113,10 +103,7 @@ export function RoleDialog({
             />
           </div>
 
-          <div className="grid gap-2">
-            <Label>Module permissions</Label>
-            <PermissionMatrix value={matrix} onChange={setMatrix} disabled={saving} />
-          </div>
+          <ModuleTagPicker value={modules} onChange={setModules} disabled={saving} />
         </div>
 
         <DialogFooter>

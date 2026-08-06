@@ -11,12 +11,21 @@ import { usePathname, useRouter } from "next/navigation";
 
 import type { AuthRole, AuthUser } from "@/lib/auth";
 import { navItems } from "@/lib/dashboard-nav";
-import { hasPermission, type ModulePermission } from "@/lib/rbac/permissions";
-import type { Action, ModuleKey } from "@/lib/rbac/modules";
+import { hasModuleAccess, type ModuleAccess } from "@/lib/rbac/permissions";
+import type { ModuleKey } from "@/lib/rbac/modules";
 
-/** The RBAC module that owns a given dashboard pathname, if any. */
+/**
+ * The RBAC module (or sub-module) that owns a given dashboard pathname, if any.
+ * Sub-module links are matched first so /user-management/roles gates on
+ * "user-roles" rather than the parent "user-management".
+ */
 function moduleForPath(pathname: string): ModuleKey | undefined {
   for (const item of navItems) {
+    for (const child of item.children ?? []) {
+      if (pathname === child.href || pathname.startsWith(`${child.href}/`)) {
+        return child.module;
+      }
+    }
     if (item.href !== "/" && (pathname === item.href || pathname.startsWith(`${item.href}/`))) {
       return item.module;
     }
@@ -24,12 +33,27 @@ function moduleForPath(pathname: string): ModuleKey | undefined {
   return undefined;
 }
 
+/**
+ * First route the user can actually open, checking sub-module links before their
+ * parent so we never land on a grouping page (e.g. /user-management) the user
+ * can't drill into — which would bounce straight back here.
+ */
+function firstAccessibleHref(modules: ModuleAccess): string | null {
+  for (const item of navItems) {
+    for (const child of item.children ?? []) {
+      if (child.module && hasModuleAccess(modules, child.module)) return child.href;
+    }
+    if (!item.children && item.module && hasModuleAccess(modules, item.module)) return item.href;
+  }
+  return null;
+}
+
 type AuthContextValue = {
   user: AuthUser;
   role: AuthRole;
-  permissions: ModulePermission[];
-  /** True if the signed-in user may perform `action` on `module`. */
-  can: (module: ModuleKey, action: Action) => boolean;
+  modules: ModuleAccess;
+  /** True if the signed-in user's role is tagged with `module`. */
+  can: (module: ModuleKey) => boolean;
   logout: () => void;
 };
 
@@ -50,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<{
     user: AuthUser;
     role: AuthRole;
-    permissions: ModulePermission[];
+    modules: ModuleAccess;
   } | null>(null);
   const [checked, setChecked] = useState(false);
 
@@ -66,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         const data = await res.json();
         if (!active) return;
-        setSession({ user: data.user, role: data.role, permissions: data.permissions });
+        setSession({ user: data.user, role: data.role, modules: data.modules });
         setChecked(true);
       } catch {
         router.replace("/signin");
@@ -84,12 +108,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!session) return;
     const module = moduleForPath(pathname);
-    if (!module || hasPermission(session.permissions, module, "read")) return;
+    if (!module || hasModuleAccess(session.modules, module)) return;
 
-    const fallback = navItems.find(
-      (item) => item.module && hasPermission(session.permissions, item.module, "read"),
-    );
-    router.replace(fallback ? fallback.href : "/signin");
+    const fallback = firstAccessibleHref(session.modules);
+    router.replace(fallback ?? "/signin");
   }, [session, pathname, router]);
 
   async function logout() {
@@ -106,8 +128,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value: AuthContextValue = {
     user: session.user,
     role: session.role,
-    permissions: session.permissions,
-    can: (module, action) => hasPermission(session.permissions, module, action),
+    modules: session.modules,
+    can: (module) => hasModuleAccess(session.modules, module),
     logout,
   };
 

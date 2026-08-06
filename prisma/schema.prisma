@@ -29,21 +29,22 @@ model Role {
   name String @unique
   description String?
   isSystem Boolean @default(false)
-  permissions Permission[]
+  modules RoleModule[]
   users User[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-model Permission {
+/**
+ * A module (or sub-module) tagged to a role. Its presence grants the role access
+ * to that module; the `module` string is a key from lib/rbac/modules.ts (either
+ * a top-level module like "transactions" or a sub-module like "user-roles").
+ */
+model RoleModule {
   id String @id @default(cuid())
   roleId String
   role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
   module String
-  canCreate Boolean @default(false)
-  canRead Boolean @default(false)
-  canUpdate Boolean @default(false)
-  canDelete Boolean @default(false)
 
   @@unique([roleId, module])
 }

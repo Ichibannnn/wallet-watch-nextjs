@@ -1,4 +1,4 @@
-import type { ModulePermission } from "@/lib/rbac/permissions";
+import type { ModuleAccess } from "@/lib/rbac/permissions";
 
 export type AuthUser = {
   id: string;
@@ -15,7 +15,7 @@ export type AuthRole = {
 export type AuthSession = {
   user: AuthUser;
   role: AuthRole;
-  permissions: ModulePermission[];
+  modules: ModuleAccess;
 };
 
 /** "Miguel Reyes" -> "MR" */

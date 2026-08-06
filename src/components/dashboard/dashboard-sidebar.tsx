@@ -8,6 +8,9 @@ import { ChevronLeft, LogOut, Wallet } from "lucide-react";
 import { navItems, type NavChild, type NavItem } from "@/lib/dashboard-nav";
 import { getInitials } from "@/lib/auth";
 import { useAuth } from "@/components/auth/auth-provider";
+import { useMobileNav } from "@/components/dashboard/mobile-nav-context";
+import { useMediaQuery } from "@/hooks/use-media-query";
+import { isModuleVisible } from "@/lib/rbac/permissions";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -145,7 +148,9 @@ function NavGroup({
 
 export function DashboardSidebar() {
   const pathname = usePathname();
-  const { user, logout, can } = useAuth();
+  const { user, logout, can, modules } = useAuth();
+  const { open: mobileOpen, setOpen: setMobileOpen } = useMobileNav();
+  const isDesktop = useMediaQuery("(min-width: 1024px)");
 
   const [collapsed, setCollapsed] = useState(false);
   // A parent group forced open after the user clicks its icon while collapsed.
@@ -177,26 +182,64 @@ export function DashboardSidebar() {
     persist(false);
   }
 
-  // Show a nav item only when the user can read its module.
-  const items = navItems.filter((item) => !item.module || can(item.module, "read"));
+  // Close the mobile drawer on Escape for keyboard users.
+  useEffect(() => {
+    if (!mobileOpen) return;
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setMobileOpen(false);
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [mobileOpen, setMobileOpen]);
+
+  // The collapsed/icon-only treatment is a desktop affordance only; the mobile
+  // drawer always shows the full, labelled sidebar.
+  const effectiveCollapsed = isDesktop && collapsed;
+
+  // Show a nav item when its module (or any of its sub-modules) is tagged, and
+  // within a group show only the sub-modules the user is actually tagged with.
+  const items = navItems
+    .filter((item) => !item.module || isModuleVisible(modules, item.module))
+    .map((item) =>
+      item.children
+        ? { ...item, children: item.children.filter((c) => !c.module || can(c.module)) }
+        : item,
+    );
 
   return (
-    <aside
-      data-collapsed={collapsed}
-      className={cn(
-        "relative flex h-full shrink-0 flex-col border-r border-sidebar-border bg-sidebar",
-        "transition-[width] duration-300 ease-in-out",
-        collapsed ? "w-[4.5rem]" : "w-64",
-      )}
-    >
-      {/* Collapse / expand handle pinned to the right edge */}
+    <>
+      {/* Backdrop behind the mobile drawer; tap to dismiss. Desktop never shows it. */}
+      <div
+        aria-hidden
+        onClick={() => setMobileOpen(false)}
+        className={cn(
+          "fixed inset-0 z-40 bg-foreground/40 backdrop-blur-sm transition-opacity duration-300 lg:hidden",
+          mobileOpen ? "opacity-100" : "pointer-events-none opacity-0",
+        )}
+      />
+
+      <aside
+        data-collapsed={effectiveCollapsed}
+        role={!isDesktop ? "dialog" : undefined}
+        aria-modal={!isDesktop && mobileOpen ? true : undefined}
+        aria-label={!isDesktop ? "Main navigation" : undefined}
+        className={cn(
+          "flex h-full shrink-0 flex-col border-r border-sidebar-border bg-sidebar",
+          "transition-[width,transform] duration-300 ease-in-out",
+          // Off-canvas drawer below lg; static in-flow column at lg and up.
+          "fixed inset-y-0 left-0 z-50 w-64 lg:static lg:z-auto lg:translate-x-0",
+          mobileOpen ? "translate-x-0 shadow-xl" : "-translate-x-full lg:shadow-none",
+          collapsed ? "lg:w-[4.5rem]" : "lg:w-64",
+        )}
+      >
+      {/* Collapse / expand handle pinned to the right edge (desktop only) */}
       <button
         type="button"
         onClick={() => (collapsed ? expandSidebar() : collapseSidebar())}
         aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         aria-expanded={!collapsed}
         className={cn(
-          "absolute top-7 -right-3 z-10 flex size-6 items-center justify-center rounded-full",
+          "absolute top-7 -right-3 z-10 hidden size-6 items-center justify-center rounded-full lg:flex",
           "border border-sidebar-border bg-sidebar text-sidebar-foreground/70 shadow-sm",
           "transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground",
         )}
@@ -211,7 +254,7 @@ export function DashboardSidebar() {
         <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
           <Wallet className="size-5" />
         </span>
-        <CollapsibleLabel collapsed={collapsed} className="leading-tight">
+        <CollapsibleLabel collapsed={effectiveCollapsed} className="leading-tight">
           <span className="block text-sm font-bold text-sidebar-foreground">Wallet Watch</span>
           <span className="block text-[0.65rem] font-medium tracking-wide text-sidebar-foreground/60 uppercase">
             Personal Finance
@@ -227,12 +270,12 @@ export function DashboardSidebar() {
               key={item.href}
               item={item}
               pathname={pathname}
-              collapsed={collapsed}
+              collapsed={effectiveCollapsed}
               openGroup={openGroup}
               onOpenGroup={(href) => expandSidebar(href)}
             />
           ) : (
-            <NavLink key={item.href} item={item} pathname={pathname} collapsed={collapsed} />
+            <NavLink key={item.href} item={item} pathname={pathname} collapsed={effectiveCollapsed} />
           ),
         )}
       </nav>
@@ -240,7 +283,7 @@ export function DashboardSidebar() {
       {/* User card */}
       <div className="border-t border-sidebar-border p-3">
         <div className="flex items-center rounded-lg px-1.5 py-1.5">
-          {collapsed ? (
+          {effectiveCollapsed ? (
             <Tooltip>
               <TooltipTrigger
                 render={
@@ -262,7 +305,7 @@ export function DashboardSidebar() {
             </span>
           )}
 
-          <CollapsibleLabel collapsed={collapsed} className="flex min-w-0 flex-1 items-center">
+          <CollapsibleLabel collapsed={effectiveCollapsed} className="flex min-w-0 flex-1 items-center">
             <span className="min-w-0 flex-1 leading-tight">
               <span className="block truncate text-sm font-semibold text-sidebar-foreground">{user.name}</span>
               <span className="block truncate text-xs text-sidebar-foreground/60">{user.email}</span>
@@ -279,6 +322,7 @@ export function DashboardSidebar() {
           </CollapsibleLabel>
         </div>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }

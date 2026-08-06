@@ -5,8 +5,8 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 import { getSessionUserId } from "@/lib/session";
-import { hasPermission, type ModulePermission } from "./permissions";
-import type { Action, ModuleKey } from "./modules";
+import { hasModuleAccess, type ModuleAccess } from "./permissions";
+import type { ModuleKey } from "./modules";
 
 export type CurrentUser = {
   id: string;
@@ -14,11 +14,12 @@ export type CurrentUser = {
   email: string;
   isActive: boolean;
   role: { id: string; name: string } | null;
-  permissions: ModulePermission[];
+  /** Module + sub-module keys this user's role is tagged with. */
+  modules: ModuleAccess;
 };
 
 /**
- * Resolve the signed-in user (with role + permissions) from the session cookie.
+ * Resolve the signed-in user (with role + tagged modules) from the session cookie.
  * Returns null when there is no valid session or the account is disabled.
  */
 export async function getCurrentUser(): Promise<CurrentUser | null> {
@@ -27,7 +28,7 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    include: { role: { include: { permissions: true } } },
+    include: { role: { include: { modules: true } } },
   });
 
   if (!user || !user.isActive) return null;
@@ -38,11 +39,11 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
     email: user.email,
     isActive: user.isActive,
     role: user.role ? { id: user.role.id, name: user.role.name } : null,
-    permissions: user.role?.permissions ?? [],
+    modules: user.role?.modules.map((m) => m.module) ?? [],
   };
 }
 
-/** Thrown by requirePermission; carries the HTTP status to respond with. */
+/** Thrown by requireModule; carries the HTTP status to respond with. */
 export class AuthorizationError extends Error {
   constructor(
     readonly status: 401 | 403,
@@ -54,16 +55,16 @@ export class AuthorizationError extends Error {
 }
 
 /**
- * Ensure the caller may perform `action` on `module`, returning the user.
+ * Ensure the caller's role is tagged with `module`, returning the user.
  * Throws AuthorizationError (401 unauthenticated / 403 forbidden) otherwise.
  * Wrap route handlers in try/catch and pass the error to `authErrorResponse`.
  */
-export async function requirePermission(module: ModuleKey, action: Action): Promise<CurrentUser> {
+export async function requireModule(module: ModuleKey): Promise<CurrentUser> {
   const user = await getCurrentUser();
   if (!user) {
     throw new AuthorizationError(401, "You must be signed in.");
   }
-  if (!hasPermission(user.permissions, module, action)) {
+  if (!hasModuleAccess(user.modules, module)) {
     throw new AuthorizationError(403, "You don't have permission to do that.");
   }
   return user;

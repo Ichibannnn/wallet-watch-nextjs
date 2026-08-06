@@ -2,26 +2,40 @@
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
-import { authErrorResponse, requirePermission } from "@/lib/rbac/guard";
-import { MODULES } from "@/lib/rbac/modules";
+import { authErrorResponse, requireModule } from "@/lib/rbac/guard";
+import { ALL_MODULE_KEYS } from "@/lib/rbac/modules";
 import { roleSchema } from "@/lib/validations/role";
 
 type Context = { params: Promise<{ id: string }> };
 
+/** Keep only known, de-duplicated module keys. */
+function normalizeModules(modules: string[]): string[] {
+  return ALL_MODULE_KEYS.filter((key) => modules.includes(key));
+}
+
+/** Flatten a role's RoleModule rows into a plain key list for the client. */
+function serializeRole(role: {
+  modules: { module: string }[];
+  [k: string]: unknown;
+}) {
+  const { modules, ...rest } = role;
+  return { ...rest, modules: modules.map((m) => m.module) };
+}
+
 export async function GET(_request: Request, { params }: Context) {
   try {
-    await requirePermission("user-management", "read");
+    await requireModule("user-roles");
     const { id } = await params;
 
     const role = await prisma.role.findUnique({
       where: { id },
-      include: { permissions: true, _count: { select: { users: true } } },
+      include: { modules: true, _count: { select: { users: true } } },
     });
     if (!role) {
       return NextResponse.json({ error: "Role not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ role });
+    return NextResponse.json({ role: serializeRole(role) });
   } catch (error) {
     return authErrorResponse(error);
   }
@@ -29,7 +43,7 @@ export async function GET(_request: Request, { params }: Context) {
 
 export async function PUT(request: Request, { params }: Context) {
   try {
-    await requirePermission("user-management", "update");
+    await requireModule("user-roles");
     const { id } = await params;
 
     const role = await prisma.role.findUnique({ where: { id } });
@@ -41,7 +55,7 @@ export async function PUT(request: Request, { params }: Context) {
     if (!result.success) {
       return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 });
     }
-    const { name, description, permissions } = result.data;
+    const { name, description, modules } = result.data;
 
     // Enforce unique name (excluding this role).
     const clash = await prisma.role.findFirst({ where: { name, NOT: { id } } });
@@ -49,36 +63,26 @@ export async function PUT(request: Request, { params }: Context) {
       return NextResponse.json({ error: "A role with this name already exists" }, { status: 409 });
     }
 
-    // Update the role and re-sync its permission matrix (one row per module).
+    // Update the role and re-sync its tagged modules (replace the whole set).
     const updated = await prisma.$transaction(async (tx) => {
-      // System roles keep their name; only description + permissions are editable.
+      // System roles keep their name; only description + modules are editable.
       await tx.role.update({
         where: { id },
         data: role.isSystem ? { description: description || null } : { name, description: description || null },
       });
 
-      for (const { key } of MODULES) {
-        const p = permissions.find((perm) => perm.module === key);
-        const data = {
-          canCreate: p?.canCreate ?? false,
-          canRead: p?.canRead ?? false,
-          canUpdate: p?.canUpdate ?? false,
-          canDelete: p?.canDelete ?? false,
-        };
-        await tx.permission.upsert({
-          where: { roleId_module: { roleId: id, module: key } },
-          update: data,
-          create: { roleId: id, module: key, ...data },
-        });
-      }
+      await tx.roleModule.deleteMany({ where: { roleId: id } });
+      await tx.roleModule.createMany({
+        data: normalizeModules(modules).map((module) => ({ roleId: id, module })),
+      });
 
       return tx.role.findUnique({
         where: { id },
-        include: { permissions: true, _count: { select: { users: true } } },
+        include: { modules: true, _count: { select: { users: true } } },
       });
     });
 
-    return NextResponse.json({ role: updated });
+    return NextResponse.json({ role: updated ? serializeRole(updated) : null });
   } catch (error) {
     return authErrorResponse(error);
   }
@@ -86,7 +90,7 @@ export async function PUT(request: Request, { params }: Context) {
 
 export async function DELETE(_request: Request, { params }: Context) {
   try {
-    await requirePermission("user-management", "delete");
+    await requireModule("user-roles");
     const { id } = await params;
 
     const role = await prisma.role.findUnique({
