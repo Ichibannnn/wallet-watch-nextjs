@@ -14,21 +14,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Pagination, type PageSize } from "@/components/ui/pagination";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { PageMeta, RoleRecord, UserRecord } from "@/lib/user-management/types";
 
 const ALL = "all";
@@ -163,6 +150,7 @@ export default function UserAccountsPage() {
           <Label htmlFor="user-search" className="text-xs text-muted-foreground">
             Search
           </Label>
+
           <div className="relative">
             <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -199,11 +187,7 @@ export default function UserAccountsPage() {
           <Label htmlFor="user-status-filter" className="text-xs text-muted-foreground">
             Status
           </Label>
-          <Select
-            items={STATUS_ITEMS}
-            value={statusFilter}
-            onValueChange={(v) => setStatusFilter(v ?? ALL)}
-          >
+          <Select items={STATUS_ITEMS} value={statusFilter} onValueChange={(v) => setStatusFilter(v ?? ALL)}>
             <SelectTrigger id="user-status-filter" className="min-w-36">
               <SelectValue />
             </SelectTrigger>

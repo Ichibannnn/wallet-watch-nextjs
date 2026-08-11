@@ -1,10 +1,4 @@
-export function ModuleHeader({
-  title,
-  description,
-}: {
-  title: string;
-  description: string;
-}) {
+export function ModuleHeader({ title, description }: { title: string; description: string }) {
   return (
     <div className="mb-6">
       <h2 className="text-2xl font-bold tracking-tight">{title}</h2>

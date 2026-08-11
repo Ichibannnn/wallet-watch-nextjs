@@ -75,7 +75,6 @@ export default function SignUpPage() {
           </header>
 
           {/* Form Content */}
-
           <form className="flex flex-col gap-4" onSubmit={form.handleSubmit(onSubmit)}>
             <div className="grid gap-2">
               <FieldGroup>
