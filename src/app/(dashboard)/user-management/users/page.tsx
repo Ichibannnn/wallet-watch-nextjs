@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { Ellipsis, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { ModuleHeader } from "@/components/dashboard/module-header";
@@ -17,6 +17,12 @@ import { Pagination, type PageSize } from "@/components/ui/pagination";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { PageMeta, RoleRecord, UserRecord } from "@/lib/user-management/types";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const ALL = "all";
 const NO_ROLE = "none";
@@ -214,7 +220,7 @@ export default function UserAccountsPage() {
               <TableHead>User</TableHead>
               <TableHead>Role</TableHead>
               <TableHead className="w-28">Status</TableHead>
-              <TableHead className="w-24 text-right">Actions</TableHead>
+              <TableHead className="w-24 text-center">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -262,8 +268,32 @@ export default function UserAccountsPage() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <div className="flex justify-end gap-1">
-                      {canManage && (
+                    <div className="flex justify-center">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger
+                          render={
+                            <Button variant="ghost">
+                              <Ellipsis />
+                            </Button>
+                          }
+                        />
+
+                        <DropdownMenuContent align="end">
+                          {canManage && (
+                            <DropdownMenuItem onClick={() => openEdit(user)}>
+                              <Pencil className="size-4" /> Edit
+                            </DropdownMenuItem>
+                          )}
+
+                          {canManage && user.id !== currentUser.id && (
+                            <DropdownMenuItem onClick={() => handleDelete(user)}>
+                              <Trash2 className="size-4" /> Delete
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+
+                      {/* {canManage && (
                         <Button
                           variant="ghost"
                           size="icon"
@@ -282,7 +312,7 @@ export default function UserAccountsPage() {
                         >
                           <Trash2 className="size-4" />
                         </Button>
-                      )}
+                      )} */}
                     </div>
                   </TableCell>
                 </TableRow>
