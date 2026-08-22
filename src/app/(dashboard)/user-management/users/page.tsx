@@ -50,6 +50,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 
 const ALL = "all";
 const NO_ROLE = "none";
@@ -81,7 +82,7 @@ export default function UserAccountsPage() {
   const canManage = can("user-accounts");
   const debouncedSearch = useDebouncedValue(search, 300);
 
-  console.log("CanManage: ", canManage);
+  const confirm = useConfirm();
 
   const hasFilters =
     debouncedSearch !== "" || roleFilter !== ALL || statusFilter !== ALL;
@@ -163,36 +164,44 @@ export default function UserAccountsPage() {
   }
 
   async function handleArchive(user: UserRecord) {
-    if (!confirm(`Archive ${user.name}? This loose access until restored.`))
-      return;
-    const res = await fetch(`/api/users/${user.id}`, { method: "PATCH" });
-    const payload = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      toast.error(payload.error ?? "Could not archive the user.");
-      return;
-    }
-    toast.success("User archived.");
-    loadUsers();
+    await confirm({
+      title: `Archive ${user.name}?`,
+      description: "They'll lose access until restored.",
+      confirmLabel: "Archive",
+      variant: "destructive",
+      onConfirm: async () => {
+        const res = await fetch(`/api/users/${user.id}`, { method: "PATCH" });
+        const payload = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          toast.error(payload.error ?? "Could not archive the user.");
+          throw new Error("archive failed"); // keeps dialog open on failure
+        }
+        toast.success("User archived.");
+        loadUsers();
+      },
+    });
   }
 
   async function handleRestore(user: UserRecord) {
-    if (!confirm(`Restore ${user.name}? They'll regain access immediately`))
-      return;
-
-    const res = await fetch(`/api/users/${user.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ isActive: true }),
+    await confirm({
+      title: `Restore ${user.name}?`,
+      description: "They'll regain access immediately.",
+      confirmLabel: "Restore",
+      onConfirm: async () => {
+        const res = await fetch(`/api/users/${user.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ isActive: true }),
+        });
+        const payload = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          toast.error(payload.error ?? "Could not restore the user.");
+          throw new Error("restore failed");
+        }
+        toast.success("User restored.");
+        loadUsers();
+      },
     });
-
-    const payload = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      toast.error(payload ?? "Could not restore the user.");
-      return;
-    }
-
-    toast.success("User restored.");
-    loadUsers();
   }
 
   return (
