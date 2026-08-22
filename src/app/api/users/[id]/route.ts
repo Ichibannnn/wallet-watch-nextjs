@@ -22,7 +22,10 @@ export async function GET(_request: Request, { params }: Context) {
     await requireModule("user-accounts");
     const { id } = await params;
 
-    const user = await prisma.user.findUnique({ where: { id }, select: userSelect });
+    const user = await prisma.user.findUnique({
+      where: { id },
+      select: userSelect,
+    });
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
@@ -44,24 +47,36 @@ export async function PUT(request: Request, { params }: Context) {
 
     const result = updateUserSchema.safeParse(await request.json());
     if (!result.success) {
-      return NextResponse.json({ error: result.error.issues[0].message }, { status: 400 });
+      return NextResponse.json(
+        { error: result.error.issues[0].message },
+        { status: 400 },
+      );
     }
     const { name, roleId, isActive, password } = result.data;
 
     // Guard against self-lockout: you can't disable or de-role your own account.
     if (current.id === id) {
       if (isActive === false) {
-        return NextResponse.json({ error: "You can't disable your own account." }, { status: 400 });
+        return NextResponse.json(
+          { error: "You can't disable your own account." },
+          { status: 400 },
+        );
       }
       if (roleId === null) {
-        return NextResponse.json({ error: "You can't remove your own role." }, { status: 400 });
+        return NextResponse.json(
+          { error: "You can't remove your own role." },
+          { status: 400 },
+        );
       }
     }
 
     if (roleId) {
       const role = await prisma.role.findUnique({ where: { id: roleId } });
       if (!role) {
-        return NextResponse.json({ error: "Selected role no longer exists" }, { status: 400 });
+        return NextResponse.json(
+          { error: "Selected role no longer exists" },
+          { status: 400 },
+        );
       }
     }
 
@@ -82,13 +97,16 @@ export async function PUT(request: Request, { params }: Context) {
   }
 }
 
-export async function DELETE(_request: Request, { params }: Context) {
+export async function PATCH(_request: Request, { params }: Context) {
   try {
     const current = await requireModule("user-accounts");
     const { id } = await params;
 
     if (current.id === id) {
-      return NextResponse.json({ error: "You can't delete your own account." }, { status: 400 });
+      return NextResponse.json(
+        { error: "You can't archive your own account." },
+        { status: 400 },
+      );
     }
 
     const target = await prisma.user.findUnique({ where: { id } });
@@ -96,8 +114,20 @@ export async function DELETE(_request: Request, { params }: Context) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    await prisma.user.delete({ where: { id } });
-    return NextResponse.json({ ok: true });
+    if (!target.isActive) {
+      return NextResponse.json(
+        { error: "User is already archived" },
+        { status: 409 },
+      );
+    }
+
+    const user = await prisma.user.update({
+      where: { id },
+      data: { isActive: false },
+      select: userSelect,
+    });
+
+    return NextResponse.json({ user });
   } catch (error) {
     return authErrorResponse(error);
   }

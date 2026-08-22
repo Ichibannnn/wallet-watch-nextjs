@@ -1,22 +1,49 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Ellipsis, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Archive,
+  ArchiveRestore,
+  Ellipsis,
+  Pencil,
+  Plus,
+  Search,
+  Trash2,
+  X,
+} from "lucide-react";
 
-import { ModuleHeader } from "@/components/dashboard/module-header";
-import { UserDialog } from "@/components/user-management/user-dialog";
 import { useAuth } from "@/components/auth/auth-provider";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { ModuleHeader } from "@/components/dashboard/module-header";
+import { UserDialog } from "@/components/user-management/user-dialog";
 import { getInitials } from "@/lib/auth";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Pagination, type PageSize } from "@/components/ui/pagination";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import type { PageMeta, RoleRecord, UserRecord } from "@/lib/user-management/types";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import type {
+  PageMeta,
+  RoleRecord,
+  UserRecord,
+} from "@/lib/user-management/types";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,27 +64,36 @@ export default function UserAccountsPage() {
   const { can, user: currentUser } = useAuth();
   const [users, setUsers] = useState<UserRecord[]>([]);
   const [roles, setRoles] = useState<RoleRecord[]>([]);
-  const [meta, setMeta] = useState<PageMeta | null>(null);
+
   const [loading, setLoading] = useState(true);
+  const [meta, setMeta] = useState<PageMeta | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<UserRecord | null>(null);
 
   // Search + filter + pagination state.
   const [search, setSearch] = useState("");
-  const debouncedSearch = useDebouncedValue(search, 300);
   const [roleFilter, setRoleFilter] = useState(ALL);
   const [statusFilter, setStatusFilter] = useState(ALL);
+
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<PageSize>(25);
 
   const canManage = can("user-accounts");
+  const debouncedSearch = useDebouncedValue(search, 300);
 
-  const hasFilters = debouncedSearch !== "" || roleFilter !== ALL || statusFilter !== ALL;
+  console.log("CanManage: ", canManage);
+
+  const hasFilters =
+    debouncedSearch !== "" || roleFilter !== ALL || statusFilter !== ALL;
 
   // Role dropdown labels (plus the "all"/"none" pseudo-options) so the trigger
   // shows the selected role's name instead of its raw id.
   const roleItems = useMemo(() => {
-    const items: Record<string, string> = { [ALL]: "All roles", [NO_ROLE]: "No role" };
+    const items: Record<string, string> = {
+      [ALL]: "All roles",
+      [NO_ROLE]: "No role",
+    };
+
     for (const role of roles) items[role.id] = role.name;
     return items;
   }, [roles]);
@@ -81,7 +117,9 @@ export default function UserAccountsPage() {
   const loadUsers = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/users?${usersQuery}`, { cache: "no-store" });
+      const res = await fetch(`/api/users?${usersQuery}`, {
+        cache: "no-store",
+      });
       if (!res.ok) {
         toast.error("Could not load user accounts.");
         return;
@@ -124,15 +162,36 @@ export default function UserAccountsPage() {
     setDialogOpen(true);
   }
 
-  async function handleDelete(user: UserRecord) {
-    if (!confirm(`Delete ${user.name}? This can't be undone.`)) return;
-    const res = await fetch(`/api/users/${user.id}`, { method: "DELETE" });
+  async function handleArchive(user: UserRecord) {
+    if (!confirm(`Archive ${user.name}? This loose access until restored.`))
+      return;
+    const res = await fetch(`/api/users/${user.id}`, { method: "PATCH" });
     const payload = await res.json().catch(() => ({}));
     if (!res.ok) {
-      toast.error(payload.error ?? "Could not delete the user.");
+      toast.error(payload.error ?? "Could not archive the user.");
       return;
     }
-    toast.success("User deleted.");
+    toast.success("User archived.");
+    loadUsers();
+  }
+
+  async function handleRestore(user: UserRecord) {
+    if (!confirm(`Restore ${user.name}? They'll regain access immediately`))
+      return;
+
+    const res = await fetch(`/api/users/${user.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isActive: true }),
+    });
+
+    const payload = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      toast.error(payload ?? "Could not restore the user.");
+      return;
+    }
+
+    toast.success("User restored.");
     loadUsers();
   }
 
@@ -143,6 +202,7 @@ export default function UserAccountsPage() {
           title="User Accounts"
           description="Create accounts, assign roles and enable or disable access."
         />
+
         {canManage && (
           <Button onClick={openCreate}>
             <Plus className="size-4" />
@@ -153,7 +213,10 @@ export default function UserAccountsPage() {
 
       <div className="mb-4 flex flex-wrap items-end gap-3">
         <div className="grid min-w-56 flex-1 gap-1.5">
-          <Label htmlFor="user-search" className="text-xs text-muted-foreground">
+          <Label
+            htmlFor="user-search"
+            className="text-xs text-muted-foreground"
+          >
             Search
           </Label>
 
@@ -170,10 +233,17 @@ export default function UserAccountsPage() {
         </div>
 
         <div className="grid gap-1.5">
-          <Label htmlFor="user-role-filter" className="text-xs text-muted-foreground">
+          <Label
+            htmlFor="user-role-filter"
+            className="text-xs text-muted-foreground"
+          >
             Role
           </Label>
-          <Select items={roleItems} value={roleFilter} onValueChange={(v) => setRoleFilter(v ?? ALL)}>
+          <Select
+            items={roleItems}
+            value={roleFilter}
+            onValueChange={(v) => setRoleFilter(v ?? ALL)}
+          >
             <SelectTrigger id="user-role-filter" className="min-w-40">
               <SelectValue />
             </SelectTrigger>
@@ -190,10 +260,17 @@ export default function UserAccountsPage() {
         </div>
 
         <div className="grid gap-1.5">
-          <Label htmlFor="user-status-filter" className="text-xs text-muted-foreground">
+          <Label
+            htmlFor="user-status-filter"
+            className="text-xs text-muted-foreground"
+          >
             Status
           </Label>
-          <Select items={STATUS_ITEMS} value={statusFilter} onValueChange={(v) => setStatusFilter(v ?? ALL)}>
+          <Select
+            items={STATUS_ITEMS}
+            value={statusFilter}
+            onValueChange={(v) => setStatusFilter(v ?? ALL)}
+          >
             <SelectTrigger id="user-status-filter" className="min-w-36">
               <SelectValue />
             </SelectTrigger>
@@ -226,14 +303,22 @@ export default function UserAccountsPage() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={4} className="py-10 text-center text-muted-foreground">
+                <TableCell
+                  colSpan={4}
+                  className="py-10 text-center text-muted-foreground"
+                >
                   Loading users…
                 </TableCell>
               </TableRow>
             ) : users.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="py-10 text-center text-muted-foreground">
-                  {hasFilters ? "No users match your filters." : "No users yet."}
+                <TableCell
+                  colSpan={4}
+                  className="py-10 text-center text-muted-foreground"
+                >
+                  {hasFilters
+                    ? "No users match your filters."
+                    : "No users yet."}
                 </TableCell>
               </TableRow>
             ) : (
@@ -248,10 +333,14 @@ export default function UserAccountsPage() {
                         <p className="font-medium">
                           {user.name}
                           {user.id === currentUser.id && (
-                            <span className="ml-1.5 text-xs text-muted-foreground">(you)</span>
+                            <span className="ml-1.5 text-xs text-muted-foreground">
+                              (you)
+                            </span>
                           )}
                         </p>
-                        <p className="text-xs text-muted-foreground">{user.email}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {user.email}
+                        </p>
                       </div>
                     </div>
                   </TableCell>
@@ -259,7 +348,9 @@ export default function UserAccountsPage() {
                     {user.role ? (
                       <Badge variant="outline">{user.role.name}</Badge>
                     ) : (
-                      <span className="text-xs text-muted-foreground">No role</span>
+                      <span className="text-xs text-muted-foreground">
+                        No role
+                      </span>
                     )}
                   </TableCell>
                   <TableCell>
@@ -285,34 +376,23 @@ export default function UserAccountsPage() {
                             </DropdownMenuItem>
                           )}
 
-                          {canManage && user.id !== currentUser.id && (
-                            <DropdownMenuItem onClick={() => handleDelete(user)}>
-                              <Trash2 className="size-4" /> Delete
+                          {canManage &&
+                          user.id !== currentUser.id &&
+                          user.isActive ? (
+                            <DropdownMenuItem
+                              onClick={() => handleArchive(user)}
+                            >
+                              <Archive className="size-4" /> Archive
                             </DropdownMenuItem>
-                          )}
+                          ) : !user.isActive ? (
+                            <DropdownMenuItem
+                              onClick={() => handleRestore(user)}
+                            >
+                              <ArchiveRestore className="size-4" /> Restore
+                            </DropdownMenuItem>
+                          ) : null}
                         </DropdownMenuContent>
                       </DropdownMenu>
-
-                      {/* {canManage && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => openEdit(user)}
-                          aria-label={`Edit ${user.name}`}
-                        >
-                          <Pencil className="size-4" />
-                        </Button>
-                      )}
-                      {canManage && user.id !== currentUser.id && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(user)}
-                          aria-label={`Delete ${user.name}`}
-                        >
-                          <Trash2 className="size-4" />
-                        </Button>
-                      )} */}
                     </div>
                   </TableCell>
                 </TableRow>

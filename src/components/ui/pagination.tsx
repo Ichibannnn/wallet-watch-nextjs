@@ -4,7 +4,13 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { PageMeta } from "@/lib/user-management/types";
 
 /** Selectable rows-per-page values; `"all"` fetches every matching row. */
@@ -51,13 +57,18 @@ export function Pagination({
     <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-4 py-3">
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
-          <Label htmlFor="rows-per-page" className="text-xs text-muted-foreground">
+          <Label
+            htmlFor="rows-per-page"
+            className="text-xs text-muted-foreground"
+          >
             Rows per page
           </Label>
           <Select
             items={PAGE_SIZE_ITEMS}
             value={String(pageSize)}
-            onValueChange={(v) => onPageSizeChange(v === "all" ? "all" : (Number(v) as PageSize))}
+            onValueChange={(v) =>
+              onPageSizeChange(v === "all" ? "all" : (Number(v) as PageSize))
+            }
             disabled={disabled}
           >
             <SelectTrigger id="rows-per-page" size="sm" className="min-w-24">
@@ -75,9 +86,18 @@ export function Pagination({
         </div>
 
         <p className="text-xs text-muted-foreground">
-          Showing <span className="font-medium text-foreground tabular-nums">{first}</span>–
-          <span className="font-medium text-foreground tabular-nums">{last}</span> of{" "}
-          <span className="font-medium text-foreground tabular-nums">{total}</span>
+          Showing{" "}
+          <span className="font-medium text-foreground tabular-nums">
+            {first}
+          </span>
+          –
+          <span className="font-medium text-foreground tabular-nums">
+            {last}
+          </span>{" "}
+          of{" "}
+          <span className="font-medium text-foreground tabular-nums">
+            {total}
+          </span>
         </p>
       </div>
 

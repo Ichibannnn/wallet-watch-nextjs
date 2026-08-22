@@ -19,6 +19,7 @@ import type { ModuleKey } from "@/lib/rbac/modules";
  * Sub-module links are matched first so /user-management/roles gates on
  * "user-roles" rather than the parent "user-management".
  */
+
 function moduleForPath(pathname: string): ModuleKey | undefined {
   for (const item of navItems) {
     for (const child of item.children ?? []) {
@@ -26,7 +27,10 @@ function moduleForPath(pathname: string): ModuleKey | undefined {
         return child.module;
       }
     }
-    if (item.href !== "/" && (pathname === item.href || pathname.startsWith(`${item.href}/`))) {
+    if (
+      item.href !== "/" &&
+      (pathname === item.href || pathname.startsWith(`${item.href}/`))
+    ) {
       return item.module;
     }
   }
@@ -41,9 +45,11 @@ function moduleForPath(pathname: string): ModuleKey | undefined {
 function firstAccessibleHref(modules: ModuleAccess): string | null {
   for (const item of navItems) {
     for (const child of item.children ?? []) {
-      if (child.module && hasModuleAccess(modules, child.module)) return child.href;
+      if (child.module && hasModuleAccess(modules, child.module))
+        return child.href;
     }
-    if (!item.children && item.module && hasModuleAccess(modules, item.module)) return item.href;
+    if (!item.children && item.module && hasModuleAccess(modules, item.module))
+      return item.href;
   }
   return null;
 }
