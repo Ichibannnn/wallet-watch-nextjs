@@ -9,7 +9,6 @@ import {
   Pencil,
   Plus,
   Search,
-  Trash2,
   X,
 } from "lucide-react";
 
@@ -51,6 +50,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useConfirm } from "@/components/ui/confirm-dialog";
+import {
+  EmptyState,
+  ErrorState,
+  TableSkeleton,
+} from "@/components/data-table/data-tables-states";
 
 const ALL = "all";
 const NO_ROLE = "none";
@@ -61,12 +65,15 @@ const STATUS_ITEMS: Record<string, string> = {
   disabled: "Disabled",
 };
 
+console.log("Status: ", STATUS_ITEMS);
+
 export default function UserAccountsPage() {
   const { can, user: currentUser } = useAuth();
   const [users, setUsers] = useState<UserRecord[]>([]);
   const [roles, setRoles] = useState<RoleRecord[]>([]);
 
   const [loading, setLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
   const [meta, setMeta] = useState<PageMeta | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<UserRecord | null>(null);
@@ -109,6 +116,7 @@ export default function UserAccountsPage() {
       page: String(page),
       pageSize: String(pageSize),
     });
+
     if (debouncedSearch) params.set("search", debouncedSearch);
     if (roleFilter !== ALL) params.set("role", roleFilter);
     if (statusFilter !== ALL) params.set("status", statusFilter);
@@ -117,17 +125,23 @@ export default function UserAccountsPage() {
 
   const loadUsers = useCallback(async () => {
     setLoading(true);
+    setIsError(false);
     try {
       const res = await fetch(`/api/users?${usersQuery}`, {
         cache: "no-store",
       });
+
       if (!res.ok) {
+        setIsError(true);
         toast.error("Could not load user accounts.");
         return;
       }
       const data = await res.json();
       setUsers(data.users);
       setMeta(data.meta);
+    } catch {
+      setIsError(true);
+      toast.error("Could not load user accounts.");
     } finally {
       setLoading(false);
     }
@@ -198,11 +212,14 @@ export default function UserAccountsPage() {
           toast.error(payload.error ?? "Could not restore the user.");
           throw new Error("restore failed");
         }
+
         toast.success("User restored.");
         loadUsers();
       },
     });
   }
+
+  console.log("StatusFilter", statusFilter);
 
   return (
     <div>
@@ -311,23 +328,37 @@ export default function UserAccountsPage() {
           </TableHeader>
           <TableBody>
             {loading ? (
+              <TableSkeleton columns={4} />
+            ) : isError ? (
               <TableRow>
-                <TableCell
-                  colSpan={4}
-                  className="py-10 text-center text-muted-foreground"
-                >
-                  Loading users…
+                <TableCell colSpan={4}>
+                  <ErrorState
+                    label="Couldn't load user accounts"
+                    description="Something went wrong on our end. Try again."
+                    onRetry={loadUsers}
+                  />
                 </TableCell>
               </TableRow>
             ) : users.length === 0 ? (
               <TableRow>
-                <TableCell
-                  colSpan={4}
-                  className="py-10 text-center text-muted-foreground"
-                >
-                  {hasFilters
-                    ? "No users match your filters."
-                    : "No users yet."}
+                <TableCell colSpan={4}>
+                  <EmptyState
+                    label={
+                      hasFilters
+                        ? "No users match your filters."
+                        : "No users yet."
+                    }
+                    description={
+                      hasFilters
+                        ? "Try adjusting or clearing your search and filters."
+                        : "Create your first user to get started."
+                    }
+                    action={
+                      hasFilters
+                        ? { label: "Clear filters", onClick: clearFilters }
+                        : undefined
+                    }
+                  />
                 </TableCell>
               </TableRow>
             ) : (

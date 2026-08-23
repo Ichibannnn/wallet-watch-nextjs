@@ -25,7 +25,9 @@ export function DashboardHeader() {
         >
           <Menu />
         </Button>
-        {/* <h1 className="truncate text-base font-semibold tracking-tight sm:text-lg">{title}</h1> */}
+        {/* <h1 className="truncate text-base font-semibold tracking-tight sm:text-lg">
+          {title}
+        </h1> */}
       </div>
 
       <div className="flex shrink-0 items-center gap-2">
