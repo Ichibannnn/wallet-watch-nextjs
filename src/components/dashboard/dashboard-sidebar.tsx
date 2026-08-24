@@ -201,9 +201,7 @@ export function DashboardSidebar() {
   const items = navItems
     .filter((item) => !item.module || isModuleVisible(modules, item.module))
     .map((item) =>
-      item.children
-        ? { ...item, children: item.children.filter((c) => !c.module || can(c.module)) }
-        : item,
+      item.children ? { ...item, children: item.children.filter((c) => !c.module || can(c.module)) } : item,
     );
 
   return (
@@ -232,96 +230,98 @@ export function DashboardSidebar() {
           collapsed ? "lg:w-[4.5rem]" : "lg:w-64",
         )}
       >
-      {/* Collapse / expand handle pinned to the right edge (desktop only) */}
-      <button
-        type="button"
-        onClick={() => (collapsed ? expandSidebar() : collapseSidebar())}
-        aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        aria-expanded={!collapsed}
-        className={cn(
-          "absolute top-7 -right-3 z-10 hidden size-6 items-center justify-center rounded-full lg:flex",
-          "border border-sidebar-border bg-sidebar text-sidebar-foreground/70 shadow-sm",
-          "transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground",
-        )}
-      >
-        <ChevronLeft
-          className={cn("size-4 transition-transform duration-300 ease-in-out", collapsed && "rotate-180")}
-        />
-      </button>
-
-      {/* Brand */}
-      <div className="flex items-center px-4 py-5">
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-          <Wallet className="size-5" />
-        </span>
-        <CollapsibleLabel collapsed={effectiveCollapsed} className="leading-tight">
-          <span className="block text-sm font-bold text-sidebar-foreground">Wallet Watch</span>
-          <span className="block text-[0.65rem] font-medium tracking-wide text-sidebar-foreground/60 uppercase">
-            Personal Finance
-          </span>
-        </CollapsibleLabel>
-      </div>
-
-      {/* Navigation */}
-      <nav className="flex-1 space-y-1 overflow-x-hidden overflow-y-auto px-3 py-2">
-        {items.map((item) =>
-          item.children && item.children.length > 0 ? (
-            <NavGroup
-              key={item.href}
-              item={item}
-              pathname={pathname}
-              collapsed={effectiveCollapsed}
-              openGroup={openGroup}
-              onOpenGroup={(href) => expandSidebar(href)}
-            />
-          ) : (
-            <NavLink key={item.href} item={item} pathname={pathname} collapsed={effectiveCollapsed} />
-          ),
-        )}
-      </nav>
-
-      {/* User card */}
-      <div className="border-t border-sidebar-border p-3">
-        <div className="flex items-center rounded-lg px-1.5 py-1.5">
-          {effectiveCollapsed ? (
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <button
-                    type="button"
-                    onClick={() => expandSidebar()}
-                    aria-label="Expand sidebar"
-                    className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
-                  />
-                }
-              >
-                {getInitials(user.name)}
-              </TooltipTrigger>
-              <TooltipContent side="right">Expand sidebar</TooltipContent>
-            </Tooltip>
-          ) : (
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
-              {getInitials(user.name)}
-            </span>
+        {/* Collapse / expand handle pinned to the right edge (desktop only) */}
+        <button
+          type="button"
+          onClick={() => (collapsed ? expandSidebar() : collapseSidebar())}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-expanded={!collapsed}
+          className={cn(
+            "absolute top-7 -right-3 z-10 hidden size-6 items-center justify-center rounded-full lg:flex",
+            "border border-sidebar-border bg-sidebar text-sidebar-foreground/70 shadow-sm",
+            "transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground",
           )}
+        >
+          <ChevronLeft
+            className={cn("size-4 transition-transform duration-300 ease-in-out", collapsed && "rotate-180")}
+          />
+        </button>
 
-          <CollapsibleLabel collapsed={effectiveCollapsed} className="flex min-w-0 flex-1 items-center">
-            <span className="min-w-0 flex-1 leading-tight">
-              <span className="block truncate text-sm font-semibold text-sidebar-foreground">{user.name}</span>
-              <span className="block truncate text-xs text-sidebar-foreground/60">{user.email}</span>
+        {/* Brand */}
+        <div className="flex items-center px-4 py-5">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <Wallet className="size-5" />
+          </span>
+          <CollapsibleLabel collapsed={effectiveCollapsed} className="leading-tight">
+            <span className="block text-sm font-bold text-sidebar-foreground">Wallet Watch</span>
+            <span className="block text-[0.65rem] font-medium tracking-wide text-sidebar-foreground/60 uppercase">
+              Personal Finance
             </span>
-
-            <button
-              type="button"
-              onClick={logout}
-              aria-label="Sign out"
-              className="ml-2 flex size-8 shrink-0 items-center justify-center rounded-lg text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
-            >
-              <LogOut className="size-[1.1rem]" />
-            </button>
           </CollapsibleLabel>
         </div>
-      </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 space-y-1 overflow-x-hidden overflow-y-auto px-3 py-2">
+          {items.map((item) =>
+            item.children && item.children.length > 0 ? (
+              <NavGroup
+                key={item.href}
+                item={item}
+                pathname={pathname}
+                collapsed={effectiveCollapsed}
+                openGroup={openGroup}
+                onOpenGroup={(href) => expandSidebar(href)}
+              />
+            ) : (
+              <NavLink key={item.href} item={item} pathname={pathname} collapsed={effectiveCollapsed} />
+            ),
+          )}
+        </nav>
+
+        {/* User card */}
+        <div className="border-t border-sidebar-border p-3">
+          <div className="flex items-center rounded-lg px-1.5 py-1.5">
+            {effectiveCollapsed ? (
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <button
+                      type="button"
+                      onClick={() => expandSidebar()}
+                      aria-label="Expand sidebar"
+                      className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+                    />
+                  }
+                >
+                  {getInitials(user.name)}
+                </TooltipTrigger>
+                <TooltipContent side="right">Expand sidebar</TooltipContent>
+              </Tooltip>
+            ) : (
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
+                {getInitials(user.name)}
+              </span>
+            )}
+
+            <CollapsibleLabel collapsed={effectiveCollapsed} className="flex min-w-0 flex-1 items-center">
+              <span className="min-w-0 flex-1 leading-tight">
+                <span className="block truncate text-sm font-semibold text-sidebar-foreground">
+                  {user.name}
+                </span>
+                <span className="block truncate text-xs text-sidebar-foreground/60">{user.email}</span>
+              </span>
+
+              <button
+                type="button"
+                onClick={logout}
+                aria-label="Sign out"
+                className="ml-2 flex size-8 shrink-0 items-center justify-center rounded-lg text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+              >
+                <LogOut className="size-[1.1rem]" />
+              </button>
+            </CollapsibleLabel>
+          </div>
+        </div>
       </aside>
     </>
   );

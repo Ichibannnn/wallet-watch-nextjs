@@ -13,11 +13,7 @@ interface TableSkeletonProps {
   className?: string;
 }
 
-export function TableSkeleton({
-  columns,
-  rows = 5,
-  className,
-}: TableSkeletonProps) {
+export function TableSkeleton({ columns, rows = 5, className }: TableSkeletonProps) {
   return (
     <>
       {Array.from({ length: rows }).map((_, rowIndex) => (
@@ -45,20 +41,9 @@ interface IllustrationStateProps {
   className?: string;
 }
 
-function IllustrationState({
-  illustration,
-  label,
-  description,
-  action,
-  className,
-}: IllustrationStateProps) {
+function IllustrationState({ illustration, label, description, action, className }: IllustrationStateProps) {
   return (
-    <div
-      className={cn(
-        "flex flex-col items-center justify-center gap-3 py-14 text-center h-96",
-        className,
-      )}
-    >
+    <div className={cn("flex flex-col items-center justify-center gap-3 py-14 text-center h-96", className)}>
       <Image
         src={illustration}
         alt=""
@@ -69,9 +54,7 @@ function IllustrationState({
       />
       <div>
         <p className="text-sm font-medium">{label}</p>
-        {description && (
-          <p className="text-xs text-muted-foreground">{description}</p>
-        )}
+        {description && <p className="text-xs text-muted-foreground">{description}</p>}
       </div>
       {action && (
         <Button variant="outline" size="sm" onClick={action.onClick}>
@@ -109,7 +92,7 @@ export function ErrorState({
 interface EmptyStateProps extends Partial<IllustrationStateProps> {}
 
 export function EmptyState({
-  illustration = "/illustrations/no-data.svg",
+  illustration = "/illustrations/no-data-2.svg",
   label = "Nothing here yet",
   description,
   action,

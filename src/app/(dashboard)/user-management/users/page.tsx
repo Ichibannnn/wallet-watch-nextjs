@@ -2,15 +2,7 @@
 
 import { toast } from "sonner";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  Archive,
-  ArchiveRestore,
-  Ellipsis,
-  Pencil,
-  Plus,
-  Search,
-  X,
-} from "lucide-react";
+import { Archive, ArchiveRestore, Ellipsis, Pencil, Plus, Search, X } from "lucide-react";
 
 import { useAuth } from "@/components/auth/auth-provider";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
@@ -23,26 +15,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Pagination, type PageSize } from "@/components/ui/pagination";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import type {
-  PageMeta,
-  RoleRecord,
-  UserRecord,
-} from "@/lib/user-management/types";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import type { PageMeta, RoleRecord, UserRecord } from "@/lib/user-management/types";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,11 +25,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useConfirm } from "@/components/ui/confirm-dialog";
-import {
-  EmptyState,
-  ErrorState,
-  TableSkeleton,
-} from "@/components/data-table/data-tables-states";
+import { EmptyState, ErrorState, TableSkeleton } from "@/components/data-table/data-tables-states";
 
 const ALL = "all";
 const NO_ROLE = "none";
@@ -64,8 +35,6 @@ const STATUS_ITEMS: Record<string, string> = {
   active: "Active",
   disabled: "Disabled",
 };
-
-console.log("Status: ", STATUS_ITEMS);
 
 export default function UserAccountsPage() {
   const { can, user: currentUser } = useAuth();
@@ -91,8 +60,7 @@ export default function UserAccountsPage() {
 
   const confirm = useConfirm();
 
-  const hasFilters =
-    debouncedSearch !== "" || roleFilter !== ALL || statusFilter !== ALL;
+  const hasFilters = debouncedSearch !== "" || roleFilter !== ALL || statusFilter !== ALL;
 
   // Role dropdown labels (plus the "all"/"none" pseudo-options) so the trigger
   // shows the selected role's name instead of its raw id.
@@ -219,6 +187,7 @@ export default function UserAccountsPage() {
     });
   }
 
+  console.log("Status: ", STATUS_ITEMS);
   console.log("StatusFilter", statusFilter);
 
   return (
@@ -239,10 +208,7 @@ export default function UserAccountsPage() {
 
       <div className="mb-4 flex flex-wrap items-end gap-3">
         <div className="grid min-w-56 flex-1 gap-1.5">
-          <Label
-            htmlFor="user-search"
-            className="text-xs text-muted-foreground"
-          >
+          <Label htmlFor="user-search" className="text-xs text-muted-foreground">
             Search
           </Label>
 
@@ -259,17 +225,10 @@ export default function UserAccountsPage() {
         </div>
 
         <div className="grid gap-1.5">
-          <Label
-            htmlFor="user-role-filter"
-            className="text-xs text-muted-foreground"
-          >
+          <Label htmlFor="user-role-filter" className="text-xs text-muted-foreground">
             Role
           </Label>
-          <Select
-            items={roleItems}
-            value={roleFilter}
-            onValueChange={(v) => setRoleFilter(v ?? ALL)}
-          >
+          <Select items={roleItems} value={roleFilter} onValueChange={(v) => setRoleFilter(v ?? ALL)}>
             <SelectTrigger id="user-role-filter" className="min-w-40">
               <SelectValue />
             </SelectTrigger>
@@ -286,17 +245,10 @@ export default function UserAccountsPage() {
         </div>
 
         <div className="grid gap-1.5">
-          <Label
-            htmlFor="user-status-filter"
-            className="text-xs text-muted-foreground"
-          >
+          <Label htmlFor="user-status-filter" className="text-xs text-muted-foreground">
             Status
           </Label>
-          <Select
-            items={STATUS_ITEMS}
-            value={statusFilter}
-            onValueChange={(v) => setStatusFilter(v ?? ALL)}
-          >
+          <Select items={STATUS_ITEMS} value={statusFilter} onValueChange={(v) => setStatusFilter(v ?? ALL)}>
             <SelectTrigger id="user-status-filter" className="min-w-36">
               <SelectValue />
             </SelectTrigger>
@@ -343,21 +295,13 @@ export default function UserAccountsPage() {
               <TableRow>
                 <TableCell colSpan={4}>
                   <EmptyState
-                    label={
-                      hasFilters
-                        ? "No users match your filters."
-                        : "No users yet."
-                    }
+                    label={hasFilters ? "No users match your filters." : "No users yet."}
                     description={
                       hasFilters
                         ? "Try adjusting or clearing your search and filters."
                         : "Create your first user to get started."
                     }
-                    action={
-                      hasFilters
-                        ? { label: "Clear filters", onClick: clearFilters }
-                        : undefined
-                    }
+                    action={hasFilters ? { label: "Clear filters", onClick: clearFilters } : undefined}
                   />
                 </TableCell>
               </TableRow>
@@ -373,14 +317,10 @@ export default function UserAccountsPage() {
                         <p className="font-medium">
                           {user.name}
                           {user.id === currentUser.id && (
-                            <span className="ml-1.5 text-xs text-muted-foreground">
-                              (you)
-                            </span>
+                            <span className="ml-1.5 text-xs text-muted-foreground">(you)</span>
                           )}
                         </p>
-                        <p className="text-xs text-muted-foreground">
-                          {user.email}
-                        </p>
+                        <p className="text-xs text-muted-foreground">{user.email}</p>
                       </div>
                     </div>
                   </TableCell>
@@ -388,9 +328,7 @@ export default function UserAccountsPage() {
                     {user.role ? (
                       <Badge variant="outline">{user.role.name}</Badge>
                     ) : (
-                      <span className="text-xs text-muted-foreground">
-                        No role
-                      </span>
+                      <span className="text-xs text-muted-foreground">No role</span>
                     )}
                   </TableCell>
                   <TableCell>
@@ -416,18 +354,12 @@ export default function UserAccountsPage() {
                             </DropdownMenuItem>
                           )}
 
-                          {canManage &&
-                          user.id !== currentUser.id &&
-                          user.isActive ? (
-                            <DropdownMenuItem
-                              onClick={() => handleArchive(user)}
-                            >
+                          {canManage && user.id !== currentUser.id && user.isActive ? (
+                            <DropdownMenuItem onClick={() => handleArchive(user)}>
                               <Archive className="size-4" /> Archive
                             </DropdownMenuItem>
                           ) : !user.isActive ? (
-                            <DropdownMenuItem
-                              onClick={() => handleRestore(user)}
-                            >
+                            <DropdownMenuItem onClick={() => handleRestore(user)}>
                               <ArchiveRestore className="size-4" /> Restore
                             </DropdownMenuItem>
                           ) : null}

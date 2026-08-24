@@ -9,10 +9,7 @@ export function AuthBrandPanel() {
   return (
     <aside className="relative hidden overflow-hidden bg-[oklch(0.42_0.11_150)] text-white lg:flex lg:flex-col lg:justify-between lg:p-12">
       {/* Decorative concentric rings */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-[0.12]"
-      >
+      <div aria-hidden className="pointer-events-none absolute inset-0 opacity-[0.12]">
         <div className="absolute -top-40 -left-24 size-[36rem] rounded-full border border-white" />
         <div className="absolute top-1/3 left-1/2 size-[40rem] rounded-full border border-white" />
         <div className="absolute -bottom-48 -left-16 size-[32rem] rounded-full border border-white" />
@@ -37,8 +34,7 @@ export function AuthBrandPanel() {
           See every peso move, the moment it happens.
         </h2>
         <p className="mt-3 text-sm text-white/70">
-          Track income, expenses and transfers across all your accounts with
-          real-time insights.
+          Track income, expenses and transfers across all your accounts with real-time insights.
         </p>
       </div>
     </aside>
@@ -55,15 +51,7 @@ function AuthIllustration() {
       aria-hidden
     >
       {/* Back card */}
-      <rect
-        x="44"
-        y="70"
-        width="200"
-        height="120"
-        rx="14"
-        fill="white"
-        opacity="0.15"
-      />
+      <rect x="44" y="70" width="200" height="120" rx="14" fill="white" opacity="0.15" />
       {/* Speech-bubble card */}
       <g>
         <rect x="70" y="52" width="200" height="120" rx="14" fill="white" />
