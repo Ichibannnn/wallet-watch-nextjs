@@ -11,7 +11,12 @@ import { SignUpInput, signUpSchema } from "@/lib/validations/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -42,7 +47,9 @@ export default function SignUpPage() {
       const payload = await response.json();
 
       if (!response.ok) {
-        setServerError(payload.error ?? "Failed to create account. Please try again.");
+        setServerError(
+          payload.error ?? "Failed to create account. Please try again.",
+        );
         return;
       }
 
@@ -61,7 +68,7 @@ export default function SignUpPage() {
       <AuthBrandPanel />
 
       {/* Form panel */}
-      <section className="relative flex flex-col bg-background px-6 py-8 sm:px-10">
+      <section className="relative flex flex-col bg-muted/40 px-6 py-8 sm:px-10">
         {/* Theme toggle — top right corner */}
         <div className="absolute top-6 right-6">
           <ThemeToggle />
@@ -70,12 +77,19 @@ export default function SignUpPage() {
         <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center">
           {/* Form Header */}
           <header className="mb-6">
-            <h1 className="text-2xl font-bold tracking-tight">Create your account</h1>
-            <p className="mt-1 text-sm text-muted-foreground">Start tracking your money with Wallet Watch</p>
+            <h1 className="text-2xl font-bold tracking-tight">
+              Create your account
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Start tracking your money with Wallet Watch
+            </p>
           </header>
 
           {/* Form Content */}
-          <form className="flex flex-col gap-4" onSubmit={form.handleSubmit(onSubmit)}>
+          <form
+            className="flex flex-col gap-4"
+            onSubmit={form.handleSubmit(onSubmit)}
+          >
             <div className="grid gap-2">
               <FieldGroup>
                 <Controller
@@ -84,8 +98,14 @@ export default function SignUpPage() {
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldLabel>Fullname</FieldLabel>
-                      <Input {...field} placeholder="Enter fullname..." autoComplete="off" />
-                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      <Input
+                        {...field}
+                        placeholder="Enter fullname..."
+                        autoComplete="off"
+                      />
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
                     </Field>
                   )}
                 />
@@ -100,8 +120,14 @@ export default function SignUpPage() {
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldLabel>Email</FieldLabel>
-                      <Input {...field} placeholder="Enter email..." autoComplete="off" />
-                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      <Input
+                        {...field}
+                        placeholder="Enter email..."
+                        autoComplete="off"
+                      />
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
                     </Field>
                   )}
                 />
@@ -116,8 +142,15 @@ export default function SignUpPage() {
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldLabel>Password</FieldLabel>
-                      <Input {...field} type="password" placeholder="Enter password..." autoComplete="off" />
-                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      <Input
+                        {...field}
+                        type="password"
+                        placeholder="Enter password..."
+                        autoComplete="off"
+                      />
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
                     </Field>
                   )}
                 />
@@ -138,7 +171,9 @@ export default function SignUpPage() {
                         placeholder="Enter password again..."
                         autoComplete="off"
                       />
-                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
                     </Field>
                   )}
                 />
@@ -151,7 +186,12 @@ export default function SignUpPage() {
               </p>
             )}
 
-            <Button type="submit" size="lg" className="mt-2 w-full" disabled={isLoading}>
+            <Button
+              type="submit"
+              size="lg"
+              className="mt-2 w-full"
+              disabled={isLoading}
+            >
               {isLoading ? "Creating account..." : "Create account"}
             </Button>
           </form>
@@ -159,7 +199,10 @@ export default function SignUpPage() {
           {/* Form Footer */}
           <p className="mt-6 text-center text-sm text-muted-foreground">
             Already have an account?{" "}
-            <Link href="/" className="font-medium text-primary underline-offset-4 hover:underline">
+            <Link
+              href="/"
+              className="font-medium text-primary underline-offset-4 hover:underline"
+            >
               Sign in
             </Link>
           </p>
