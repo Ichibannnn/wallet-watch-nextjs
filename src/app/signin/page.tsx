@@ -15,7 +15,7 @@ export default async function SignInPage({
       <AuthBrandPanel />
 
       {/* Form panel */}
-      <section className="relative flex flex-col bg-background px-6 py-8 sm:px-10">
+      <section className="relative flex flex-col bg-muted/40 px-6 py-8 sm:px-10">
         {/* Theme toggle — top right corner */}
         <div className="absolute top-6 right-6">
           <ThemeToggle />
@@ -39,7 +39,10 @@ export default async function SignInPage({
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
             Don&apos;t have an account?{" "}
-            <Link href="/signup" className="font-medium text-primary underline-offset-4 hover:underline">
+            <Link
+              href="/signup"
+              className="font-medium text-primary underline-offset-4 hover:underline"
+            >
               Sign up
             </Link>
           </p>
