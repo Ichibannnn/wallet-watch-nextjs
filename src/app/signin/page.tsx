@@ -24,9 +24,7 @@ export default async function SignInPage({
         <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center">
           <header className="mb-6">
             <h1 className="text-2xl font-bold tracking-tight">Welcome back</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Sign in to your Wallet Watch account
-            </p>
+            <p className="mt-1 text-sm text-muted-foreground">Sign in to your Wallet Watch account</p>
           </header>
 
           {registered && (
@@ -39,10 +37,7 @@ export default async function SignInPage({
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
             Don&apos;t have an account?{" "}
-            <Link
-              href="/signup"
-              className="font-medium text-primary underline-offset-4 hover:underline"
-            >
+            <Link href="/signup" className="font-medium text-primary underline-offset-4 hover:underline">
               Sign up
             </Link>
           </p>
