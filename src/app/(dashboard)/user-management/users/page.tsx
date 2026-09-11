@@ -18,12 +18,7 @@ import { Pagination, type PageSize } from "@/components/ui/pagination";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { PageMeta, RoleRecord, UserRecord } from "@/lib/user-management/types";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { EmptyState, ErrorState, TableSkeleton } from "@/components/data-table/data-tables-states";
 
@@ -189,15 +184,12 @@ export default function UserAccountsPage() {
 
   // console.log("Status: ", STATUS_ITEMS);
   // console.log("StatusFilter", statusFilter);
-  console.log("Can:", canManage);
+  // console.log("Can:", canManage);
 
   return (
     <div>
       <div className="mb-6 flex items-start justify-between gap-4">
-        <ModuleHeader
-          title="User Accounts"
-          description="Create accounts, assign roles and enable or disable access."
-        />
+        <ModuleHeader title="User Accounts" description="Create accounts, assign roles and enable or disable access." />
 
         {canManage && (
           <Button onClick={openCreate}>
@@ -215,14 +207,7 @@ export default function UserAccountsPage() {
 
           <div className="relative">
             <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              id="user-search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by name or email…"
-              className="pl-8"
-              autoComplete="off"
-            />
+            <Input id="user-search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by name or email…" className="pl-8" autoComplete="off" />
           </div>
         </div>
 
@@ -286,11 +271,7 @@ export default function UserAccountsPage() {
             ) : isError ? (
               <TableRow>
                 <TableCell colSpan={4}>
-                  <ErrorState
-                    label="Couldn't load user accounts"
-                    description="Something went wrong on our end. Try again."
-                    onRetry={loadUsers}
-                  />
+                  <ErrorState label="Couldn't load user accounts" description="Something went wrong on our end. Try again." onRetry={loadUsers} />
                 </TableCell>
               </TableRow>
             ) : users.length === 0 ? (
@@ -298,11 +279,7 @@ export default function UserAccountsPage() {
                 <TableCell colSpan={4}>
                   <EmptyState
                     label={hasFilters ? "No users match your filters." : "No users yet."}
-                    description={
-                      hasFilters
-                        ? "Try adjusting or clearing your search and filters."
-                        : "Create your first user to get started."
-                    }
+                    description={hasFilters ? "Try adjusting or clearing your search and filters." : "Create your first user to get started."}
                     action={hasFilters ? { label: "Clear filters", onClick: clearFilters } : undefined}
                   />
                 </TableCell>
@@ -312,31 +289,19 @@ export default function UserAccountsPage() {
                 <TableRow key={user.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
-                        {getInitials(user.name)}
-                      </span>
+                      <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">{getInitials(user.name)}</span>
                       <div className="leading-tight">
                         <p className="font-medium">
                           {user.name}
-                          {user.id === currentUser.id && (
-                            <span className="ml-1.5 text-xs text-muted-foreground">(you)</span>
-                          )}
+                          {user.id === currentUser.id && <span className="ml-1.5 text-xs text-muted-foreground">(you)</span>}
                         </p>
                         <p className="text-xs text-muted-foreground">{user.email}</p>
                       </div>
                     </div>
                   </TableCell>
+                  <TableCell>{user.role ? <Badge variant="outline">{user.role.name}</Badge> : <span className="text-xs text-muted-foreground">No role</span>}</TableCell>
                   <TableCell>
-                    {user.role ? (
-                      <Badge variant="outline">{user.role.name}</Badge>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">No role</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={user.isActive ? "default" : "secondary"}>
-                      {user.isActive ? "Active" : "Disabled"}
-                    </Badge>
+                    <Badge variant={user.isActive ? "default" : "secondary"}>{user.isActive ? "Active" : "Disabled"}</Badge>
                   </TableCell>
                   <TableCell>
                     <div className="flex justify-center">
@@ -375,24 +340,10 @@ export default function UserAccountsPage() {
           </TableBody>
         </Table>
 
-        {meta && !loading && (
-          <Pagination
-            meta={meta}
-            pageSize={pageSize}
-            onPageChange={setPage}
-            onPageSizeChange={setPageSize}
-            disabled={loading}
-          />
-        )}
+        {meta && !loading && <Pagination meta={meta} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} disabled={loading} />}
       </div>
 
-      <UserDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        user={editing}
-        roles={roles}
-        onSaved={loadUsers}
-      />
+      <UserDialog open={dialogOpen} onOpenChange={setDialogOpen} user={editing} roles={roles} onSaved={loadUsers} />
     </div>
   );
 }

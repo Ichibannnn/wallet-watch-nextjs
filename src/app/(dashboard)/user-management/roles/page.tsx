@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { Ellipsis, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { ModuleHeader } from "@/components/dashboard/module-header";
@@ -13,23 +13,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Pagination, type PageSize } from "@/components/ui/pagination";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ALL_MODULE_KEYS, MODULE_LABELS } from "@/lib/rbac/modules";
 import type { PageMeta, RoleRecord } from "@/lib/user-management/types";
+import { EmptyState, TableSkeleton } from "@/components/data-table/data-tables-states";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 const ALL = "all";
 
@@ -80,6 +69,7 @@ export default function UserRolesPage() {
       page: String(page),
       pageSize: String(pageSize),
     });
+
     if (debouncedSearch) params.set("search", debouncedSearch);
     if (typeFilter !== ALL) params.set("type", typeFilter);
     if (moduleFilter !== ALL) params.set("module", moduleFilter);
@@ -137,10 +127,7 @@ export default function UserRolesPage() {
   return (
     <div>
       <div className="mb-6 flex items-start justify-between gap-4">
-        <ModuleHeader
-          title="User Roles"
-          description="Define roles and tag the modules each one can access."
-        />
+        <ModuleHeader title="User Roles" description="Define roles and tag the modules each one can access." />
         {canManage && (
           <Button onClick={openCreate}>
             <Plus className="size-4" />
@@ -156,13 +143,7 @@ export default function UserRolesPage() {
           </Label>
           <div className="relative">
             <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              id="role-search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by name or description…"
-              className="pl-8"
-            />
+            <Input id="role-search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by name or description…" className="pl-8" />
           </div>
         </div>
 
@@ -186,11 +167,7 @@ export default function UserRolesPage() {
           <Label htmlFor="role-module-filter" className="text-xs text-muted-foreground">
             Module
           </Label>
-          <Select
-            items={MODULE_ITEMS}
-            value={moduleFilter}
-            onValueChange={(v) => setModuleFilter(v ?? ALL)}
-          >
+          <Select items={MODULE_ITEMS} value={moduleFilter} onValueChange={(v) => setModuleFilter(v ?? ALL)}>
             <SelectTrigger id="role-module-filter" className="min-w-44">
               <SelectValue />
             </SelectTrigger>
@@ -225,15 +202,14 @@ export default function UserRolesPage() {
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow>
-                <TableCell colSpan={4} className="py-10 text-center text-muted-foreground">
-                  Loading roles…
-                </TableCell>
-              </TableRow>
+              <TableSkeleton columns={4} />
             ) : roles.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="py-10 text-center text-muted-foreground">
-                  {hasFilters ? "No roles match your filters." : "No roles yet."}
+                <TableCell colSpan={4}>
+                  <EmptyState
+                    label={hasFilters ? "No roles match your filters." : "No roles yet."}
+                    description={hasFilters ? "Try changing your search or filters." : "Create a new role to get started."}
+                  />
                 </TableCell>
               </TableRow>
             ) : (
@@ -246,9 +222,7 @@ export default function UserRolesPage() {
                         <span className="font-medium">{role.name}</span>
                         {role.isSystem && <Badge variant="secondary">Built-in</Badge>}
                       </div>
-                      {role.description && (
-                        <p className="mt-0.5 text-xs text-muted-foreground">{role.description}</p>
-                      )}
+                      {role.description && <p className="mt-0.5 text-xs text-muted-foreground">{role.description}</p>}
                     </TableCell>
                     <TableCell className="align-top">
                       {labels.length === 0 ? (
@@ -263,32 +237,39 @@ export default function UserRolesPage() {
                         </div>
                       )}
                     </TableCell>
-                    <TableCell className="text-center align-top tabular-nums">
-                      {role._count.users}
-                    </TableCell>
+                    <TableCell className="text-center align-top tabular-nums">{role._count.users}</TableCell>
                     <TableCell className="align-top">
-                      <div className="flex justify-end gap-1">
+                      <div className="flex justify-center">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger
+                            render={
+                              <Button variant="ghost">
+                                <Ellipsis />
+                              </Button>
+                            }
+                          />
+
+                          <DropdownMenuContent align="end">
+                            {canManage && (
+                              <DropdownMenuItem onClick={() => openEdit(role)} aria-label={`Edit ${role.name}`}>
+                                <Pencil className="size-4" /> Edit
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                      {/* <div className="flex justify-end gap-1">
                         {canManage && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => openEdit(role)}
-                            aria-label={`Edit ${role.name}`}
-                          >
+                          <Button variant="ghost" size="icon" onClick={() => openEdit(role)} aria-label={`Edit ${role.name}`}>
                             <Pencil className="size-4" />
                           </Button>
                         )}
                         {canManage && !role.isSystem && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(role)}
-                            aria-label={`Delete ${role.name}`}
-                          >
+                          <Button variant="ghost" size="icon" onClick={() => handleDelete(role)} aria-label={`Delete ${role.name}`}>
                             <Trash2 className="size-4" />
                           </Button>
                         )}
-                      </div>
+                      </div> */}
                     </TableCell>
                   </TableRow>
                 );
@@ -297,15 +278,7 @@ export default function UserRolesPage() {
           </TableBody>
         </Table>
 
-        {meta && !loading && (
-          <Pagination
-            meta={meta}
-            pageSize={pageSize}
-            onPageChange={setPage}
-            onPageSizeChange={setPageSize}
-            disabled={loading}
-          />
-        )}
+        {meta && !loading && <Pagination meta={meta} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} disabled={loading} />}
       </div>
 
       <RoleDialog open={dialogOpen} onOpenChange={setDialogOpen} role={editing} onSaved={load} />
